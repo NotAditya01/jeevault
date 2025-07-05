@@ -15,16 +15,10 @@ async function fetchResources() {
             throw new Error(`Failed to fetch resources: ${response.status} ${response.statusText}`);
         }
         
-        // Check content type to ensure it's JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response');
-        }
-        
         resources = await response.json();
         
         if (resources.length === 0) {
-            showEmptyState('No resources available yet. Be the first to upload!');
+            showEmptyState('No resources available yet. Be the first to share!');
         } else {
             renderResources();
             updateTagFilters();
@@ -89,7 +83,13 @@ function renderResources() {
                         </span>
                     </div>
                     <span class="text-sm text-gray-500 dark:text-gray-400">
-                        <i class="bi bi-clock"></i> ${resource.formattedDate}
+                        <i class="bi bi-clock"></i> ${new Date(resource.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
                     </span>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">${resource.title}</h3>
@@ -97,10 +97,10 @@ function renderResources() {
                     ${resource.description}
                 </p>
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <a href="${resource.type === 'file' ? resource.fileUrl : resource.url}" target="_blank" 
+                    <a href="${resource.url}" target="_blank" 
                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <i class="bi bi-${resource.type === 'file' ? 'download' : 'link-45deg'} mr-2"></i> 
-                        ${resource.type === 'file' ? 'Download' : 'View'}
+                        <i class="bi bi-link-45deg mr-2"></i> 
+                        View Resource
                     </a>
                     <span class="text-xs text-gray-500 dark:text-gray-400">
                         Shared by: ${resource.uploadedBy || 'Anonymous'}

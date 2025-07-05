@@ -13,25 +13,11 @@ const requiredEnvVars = {
     PORT: 'Server port (default: 3000)'
 };
 
-// Define optional environment variables
-const optionalEnvVars = {
-    // Cloudinary configuration (optional but recommended for production)
-    CLOUDINARY_CLOUD_NAME: 'dtgruon9i',
-    CLOUDINARY_API_KEY: '165231835663976',
-    CLOUDINARY_API_SECRET: 'JT92rPn64_HnnGR2uWfeeLwq-6E',
-    
-    // MongoDB connection options (optional)
-    MONGODB_CONNECTION_TIMEOUT: 'MongoDB connection timeout in ms (default: 30000)',
-    MONGODB_SOCKET_TIMEOUT: 'MongoDB socket timeout in ms (default: 45000)'
-};
-
 function validateConfig() {
     console.log(chalk.blue('\n🔍 Checking environment variables...\n'));
     
     let missingVars = [];
     let configuredVars = [];
-    let optionalConfiguredVars = [];
-    let optionalMissingVars = [];
     
     // Check each required variable
     for (const [key, description] of Object.entries(requiredEnvVars)) {
@@ -47,7 +33,6 @@ function validateConfig() {
         if (!process.env[key]) {
             missingVars.push({ key, description });
         } else {
-           
             const isSensitive = key.includes('PASSWORD') || 
                               key.includes('SECRET') || 
                               key.includes('API_KEY') ||
@@ -60,46 +45,11 @@ function validateConfig() {
             });
         }
     }
-    
-    // Check optional variables
-    for (const [key, description] of Object.entries(optionalEnvVars)) {
-        if (process.env[key]) {
-            const isSensitive = key.includes('PASSWORD') || 
-                              key.includes('SECRET') || 
-                              key.includes('API_KEY');
-            
-            optionalConfiguredVars.push({
-                key,
-                value: isSensitive ? '[SET]' : process.env[key],
-                description
-            });
-        } else {
-            optionalMissingVars.push({ key, description });
-        }
-    }
 
     if (configuredVars.length > 0) {
-        console.log(chalk.green('✅ Configured Required Variables:'));
+        console.log(chalk.green('✅ Configured Variables:'));
         configuredVars.forEach(({ key, value, description }) => {
             console.log(chalk.green(`   ${key}: ${value}`));
-            console.log(chalk.gray(`      Description: ${description}`));
-        });
-        console.log('');
-    }
-    
-    if (optionalConfiguredVars.length > 0) {
-        console.log(chalk.green('✅ Configured Optional Variables:'));
-        optionalConfiguredVars.forEach(({ key, value, description }) => {
-            console.log(chalk.green(`   ${key}: ${value}`));
-            console.log(chalk.gray(`      Description: ${description}`));
-        });
-        console.log('');
-    }
-    
-    if (optionalMissingVars.length > 0) {
-        console.log(chalk.yellow('⚠️ Missing Optional Variables:'));
-        optionalMissingVars.forEach(({ key, description }) => {
-            console.log(chalk.yellow(`   ${key}`));
             console.log(chalk.gray(`      Description: ${description}`));
         });
         console.log('');
@@ -114,7 +64,6 @@ function validateConfig() {
         });
         console.log('');
         
-    
         console.log(chalk.yellow('📝 Add these to your .env file:'));
         console.log(chalk.yellow('\n```'));
         missingVars.forEach(({ key }) => {
@@ -131,8 +80,6 @@ function validateConfig() {
 
 // Get MongoDB connection options
 function getMongoDbOptions() {
-    // For older MongoDB drivers, use a simple configuration
-    // without any options that might not be supported
     return {
         // No additional options - use connection string parameters instead
     };
@@ -148,11 +95,6 @@ module.exports = {
         admin: {
             username: process.env.ADMIN_USERNAME,
             password: process.env.ADMIN_PASSWORD
-        },
-        cloudinary: {
-            cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-            apiKey: process.env.CLOUDINARY_API_KEY,
-            apiSecret: process.env.CLOUDINARY_API_SECRET
         }
     }
 }; 

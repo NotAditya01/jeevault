@@ -16,22 +16,10 @@ const resourceSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    fileUrl: {
-        type: String,
-        required: function() {
-            return this.type === 'file';
-        }
-    },
     url: {
         type: String,
-        required: function() {
-            return this.type === 'url';
-        }
-    },
-    type: {
-        type: String,
-        enum: ['file', 'url'],
-        required: true
+        required: true,
+        trim: true
     },
     tag: {
         type: String,

@@ -2,13 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const { upload } = require('./utils/uploadHandler');
 const Resource = require('./models/Resource');
-const fs = require('fs');
-const moment = require('moment');
 const chalk = require('chalk');
 const { validateConfig, config, getMongoDbOptions } = require('./utils/config');
-const { uploadPdfToCloudinary, isCloudinaryConfigured } = require('./utils/cloudinary');
 
 // Validate environment variables before starting
 try {
@@ -18,15 +14,11 @@ try {
     process.exit(1);
 }
 
-// Check if Cloudinary is configured
-const cloudinaryEnabled = isCloudinaryConfigured();
-
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 app.use((req, res, next) => {
   const originalSend = res.send;
@@ -41,9 +33,6 @@ app.use((req, res, next) => {
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
 
 // Connect to MongoDB with improved connection options
 console.log(chalk.blue('\n Connecting to MongoDB...\n'));
@@ -137,108 +126,41 @@ app.get('/admin.html', (req, res) => {
 });
 
 // API Routes
-app.post('/api/resources', upload.single('file'), async (req, res) => {
-    console.log(chalk.blue('📝 Resource upload request received'));
+app.post('/api/resources', async (req, res) => {
+    console.log(chalk.blue('📝 Resource submission request received'));
     console.log(chalk.gray(`Body: ${JSON.stringify(req.body)}`));
-    console.log(chalk.gray(`File: ${req.file ? JSON.stringify({
-        filename: req.file.filename,
-        path: req.file.path,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-    }) : 'No file'}`));
     
     try {
-        const { title, description, type, subject, tag, url, uploadedBy } = req.body;
+        const { title, description, subject, tag, url, uploadedBy } = req.body;
 
-        if (!title || !description || !subject || !tag) {
+        // Validate required fields
+        if (!title || !description || !subject || !tag || !url) {
             console.log(chalk.yellow('⚠️ Missing required fields'));
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        // Validate URL
+        if (!isValidUrl(url)) {
+            console.log(chalk.yellow(`⚠️ Invalid URL: ${url}`));
+            return res.status(400).json({ error: 'Invalid URL format' });
+        }
+
+        // Create new resource
         const resource = new Resource({
             title,
             description,
             subject,
-            type: type || 'file',
             tag,
+            url,
             uploadedBy: uploadedBy || 'Anonymous',
             approved: false // Always start as unapproved
         });
-
-        if (type === 'file' || !type) {
-            if (!req.file) {
-                console.log(chalk.yellow('⚠️ No file uploaded'));
-                return res.status(400).json({ error: 'No file uploaded' });
-            }
-
-            // Check if we're in production (Vercel)
-            const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
-            
-            if (isProduction) {
-                // In production, use Cloudinary if configured
-                if (!cloudinaryEnabled) {
-                    console.log(chalk.yellow('⚠️ Cloudinary not configured in production environment'));
-                    return res.status(400).json({ 
-                        error: 'File uploads are not supported in the production environment. Please use URL resources instead.',
-                        production: true
-                    });
-                }
-                
-                try {
-                    // Make sure we have the file buffer
-                    if (!req.file || !req.file.buffer) {
-                        console.error(chalk.red('❌ No file buffer available'));
-                        return res.status(400).json({ error: 'File upload failed - no data received' });
-                    }
-                    
-                    console.log(chalk.blue(`📊 Received file: ${req.file.originalname}, size: ${req.file.size} bytes`));
-                    
-                    // Upload to Cloudinary
-                    const cloudinaryResult = await uploadPdfToCloudinary(
-                        req.file.buffer, 
-                        req.file.originalname
-                    );
-                    
-                    // Store Cloudinary URL in the database
-                    resource.fileUrl = cloudinaryResult.secure_url;
-                    console.log(chalk.green(`✅ File uploaded to Cloudinary: ${resource.fileUrl}`));
-                } catch (cloudinaryError) {
-                    console.error(chalk.red(`❌ Cloudinary upload error: ${cloudinaryError.message}`));
-                    return res.status(500).json({ error: 'Failed to upload file to cloud storage' });
-                }
-            } else {
-                // In development, use local file storage
-                // Ensure uploads directory exists
-                const uploadsDir = path.join(__dirname, 'uploads');
-                if (!fs.existsSync(uploadsDir)) {
-                    console.log(chalk.blue('📁 Creating uploads directory'));
-                    fs.mkdirSync(uploadsDir, { recursive: true });
-                }
-
-                // Store file path in the database
-                resource.fileUrl = `/uploads/${req.file.filename}`;
-                console.log(chalk.green(`✅ File saved locally: ${resource.fileUrl}`));
-            }
-        } else if (type === 'url') {
-            if (!url) {
-                console.log(chalk.yellow('⚠️ No URL provided'));
-                return res.status(400).json({ error: 'No URL provided' });
-            }
-            
-            if (!isValidUrl(url)) {
-                console.log(chalk.yellow(`⚠️ Invalid URL: ${url}`));
-                return res.status(400).json({ error: 'Invalid URL format' });
-            }
-            
-            resource.url = url;
-            console.log(chalk.green(`✅ URL added: ${url}`));
-        }
 
         await resource.save();
         console.log(chalk.green(`✅ Resource saved to database: ${resource._id}`));
         res.status(201).json({ 
             success: true, 
-            message: 'Resource submitted successfully! It will be available after admin approval.',
+            message: 'Your resource has been submitted. It will appear after admin approval.',
             resource
         });
     } catch (error) {
@@ -248,116 +170,97 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
     }
 });
 
-// Get approved resources only
+// Get all resources (approved only)
 app.get('/api/resources', async (req, res) => {
-  try {
-    const resources = await Resource.find({ approved: true })
-      .sort('-createdAt');
-    
-    const formattedResources = resources.map(resource => ({
-      ...resource.toObject(),
-      formattedDate: moment(resource.createdAt).format('D MMMM YYYY, h:mm A')
-    }));
-    
-    res.json(formattedResources);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch resources' });
-  }
-});
-
-// Admin routes - protected with authentication
-app.get('/admin/resources', authenticateAdmin, async (req, res) => {
-  try {
-    const resources = await Resource.find()
-      .sort('-createdAt');
-    
-    const formattedResources = resources.map(resource => ({
-      ...resource.toObject(),
-      formattedDate: moment(resource.createdAt).format('D MMMM YYYY, h:mm A')
-    }));
-    
-    res.json(formattedResources);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch resources' });
-  }
-});
-
-app.patch('/admin/resources/:id/approve', authenticateAdmin, async (req, res) => {
-  try {
-    const resource = await Resource.findByIdAndUpdate(
-      req.params.id,
-      { approved: true },
-      { new: true }
-    );
-    res.json(resource);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to approve resource' });
-  }
-});
-
-// New endpoint for editing resources
-app.put('/admin/resources/:id', authenticateAdmin, async (req, res) => {
-  try {
-    const { title, description, subject, tag, uploadedBy } = req.body;
-    
-    if (!title || !description || !subject || !tag) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    try {
+        const resources = await Resource.find({ approved: true })
+            .sort({ createdAt: -1 });
+        res.json(resources);
+    } catch (error) {
+        console.error(chalk.red(`❌ Error fetching resources: ${error.message}`));
+        res.status(500).json({ error: 'Failed to fetch resources' });
     }
-    
-    const resource = await Resource.findByIdAndUpdate(
-      req.params.id,
-      { 
-        title, 
-        description, 
-        subject, 
-        tag,
-        uploadedBy: uploadedBy || 'Anonymous'
-      },
-      { new: true, runValidators: true }
-    );
-    
-    if (!resource) {
-      return res.status(404).json({ error: 'Resource not found' });
-    }
-    
-    console.log(chalk.green(`✅ Resource updated: ${resource._id}`));
-    res.json(resource);
-  } catch (error) {
-    console.error(chalk.red(`❌ Error updating resource: ${error.message}`));
-    res.status(500).json({ error: error.message || 'Failed to update resource' });
-  }
 });
 
-app.delete('/admin/resources/:id', authenticateAdmin, async (req, res) => {
-  try {
-    const resource = await Resource.findById(req.params.id);
-    if (!resource) {
-      return res.status(404).json({ error: 'Resource not found' });
+// Admin routes
+app.get('/api/admin/resources', authenticateAdmin, async (req, res) => {
+    try {
+        const { status = 'pending' } = req.query;
+        const resources = await Resource.find({ 
+            approved: status === 'approved'  // This will be true for approved, false for pending
+        }).sort({ createdAt: -1 });
+        
+        console.log(chalk.blue(`📋 Fetching ${status} resources`));
+        console.log(chalk.gray(`Found ${resources.length} resources`));
+        
+        res.json(resources);
+    } catch (error) {
+        console.error(chalk.red(`❌ Error fetching admin resources: ${error.message}`));
+        res.status(500).json({ error: 'Failed to fetch resources' });
     }
-
-    // If it's a file type resource, delete the file
-    if (resource.type === 'file' && resource.fileUrl) {
-      const filePath = path.join(__dirname, resource.fileUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log(chalk.green(`✅ File deleted: ${filePath}`));
-      }
-    }
-
-    await Resource.findByIdAndDelete(req.params.id);
-    res.status(204).send();
-  } catch (error) {
-    console.error(chalk.red(`❌ Delete error: ${error.message}`));
-    res.status(500).json({ error: 'Failed to delete resource' });
-  }
 });
 
-// Handle 404 - Keep this as the last route
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+app.put('/api/admin/resources/:id/approve', authenticateAdmin, async (req, res) => {
+    try {
+        const resource = await Resource.findByIdAndUpdate(
+            req.params.id,
+            { approved: true },
+            { new: true }
+        );
+        if (!resource) {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+        res.json(resource);
+    } catch (error) {
+        console.error(chalk.red(`❌ Error approving resource: ${error.message}`));
+        res.status(500).json({ error: 'Failed to approve resource' });
+    }
+});
+
+app.delete('/api/admin/resources/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const resource = await Resource.findByIdAndDelete(req.params.id);
+        if (!resource) {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+        res.json({ message: 'Resource deleted successfully' });
+    } catch (error) {
+        console.error(chalk.red(`❌ Error deleting resource: ${error.message}`));
+        res.status(500).json({ error: 'Failed to delete resource' });
+    }
+});
+
+// Admin: Update resource
+app.put('/api/admin/resources/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, description, subject, tag, url, uploadedBy } = req.body;
+
+        // Validate required fields
+        if (!title || !description || !subject || !tag || !url) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Update resource
+        const updatedResource = await Resource.findByIdAndUpdate(
+            id,
+            { title, description, subject, tag, url, uploadedBy },
+            { new: true }
+        );
+
+        if (!updatedResource) {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
+
+        res.json(updatedResource);
+    } catch (error) {
+        console.error('Error updating resource:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Start server
-app.listen(config.port, () => {
-    console.log(chalk.green(`\n🚀 Server is running on port ${config.port}\n`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(chalk.green(`\n✅ Server is running on port ${PORT}\n`));
 }); 

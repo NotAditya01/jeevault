@@ -146,49 +146,53 @@
             </div>
             
             <form id="editForm" class="space-y-6">
-                <input type="hidden" id="editId">
-                
                 <div>
                     <label for="editTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
-                    <input type="text" id="editTitle" name="editTitle" required
+                    <input type="text" id="editTitle" name="title" required
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                 </div>
                 
                 <div>
                     <label for="editDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                    <textarea id="editDescription" name="editDescription" rows="3" required
+                    <textarea id="editDescription" name="description" rows="3" required
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"></textarea>
                 </div>
                 
                 <div>
                     <label for="editSubject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
-                    <select id="editSubject" name="editSubject" required
+                    <select id="editSubject" name="subject" required
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        <option value="">Select a subject</option>
                         <option value="Physics">Physics</option>
                         <option value="Chemistry">Chemistry</option>
-                        <option value="Math">Math</option>
+                        <option value="Mathematics">Mathematics</option>
                     </select>
                 </div>
                 
                 <div>
                     <label for="editTag" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resource Type</label>
-                    <select id="editTag" name="editTag" required
+                    <select id="editTag" name="tag" required
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        <option value="">Select type</option>
-                        <option value="notes">Notes</option>
-                        <option value="books">Books</option>
+                        <option value="Notes">Notes</option>
+                        <option value="Question Paper">Question Paper</option>
+                        <option value="Study Material">Study Material</option>
+                        <option value="Video">Video</option>
                     </select>
+                </div>
+
+                <div>
+                    <label for="editUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resource URL</label>
+                    <input type="url" id="editUrl" name="url" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                 </div>
                 
                 <div>
                     <label for="editUploadedBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Uploaded By</label>
-                    <input type="text" id="editUploadedBy" name="editUploadedBy" required
+                    <input type="text" id="editUploadedBy" name="uploadedBy"
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                 </div>
                 
                 <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancelEdit" onclick="closeEditModal()"
+                    <button type="button" onclick="closeEditModal()"
                         class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Cancel
                     </button>

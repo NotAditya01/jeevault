@@ -56,15 +56,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username, password })
             });
             
-            // Check if response is ok before trying to parse JSON
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-            }
-            
-            // Check content type to ensure it's JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Server returned non-JSON response');
             }
             
             const result = await response.json();
@@ -99,13 +92,13 @@ document.addEventListener('DOMContentLoaded', function() {
         pendingTab.addEventListener('click', () => {
             currentFilter = 'pending';
             updateTabs();
-            filterResources();
+            fetchResources();
         });
 
         approvedTab.addEventListener('click', () => {
             currentFilter = 'approved';
             updateTabs();
-            filterResources();
+            fetchResources();
         });
     }
 
@@ -153,7 +146,8 @@ async function fetchResources() {
             return;
         }
         
-        const response = await fetch('/admin/resources', {
+        console.log('Fetching resources with status:', currentFilter);
+        const response = await fetch(`/api/admin/resources?status=${currentFilter}`, {
             headers: {
                 'Authorization': `Basic ${credentials}`
             }
@@ -167,35 +161,17 @@ async function fetchResources() {
             return;
         }
         
-        // Check if response is ok and content type is JSON before parsing
         if (!response.ok) {
             throw new Error(`Server returned ${response.status}: ${response.statusText}`);
         }
         
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response');
-        }
-        
         allResources = await response.json();
-        filterResources();
+        console.log(`Received ${allResources.length} resources`);
+        renderResources(allResources);
     } catch (error) {
         console.error('Error fetching resources:', error);
         showLoginMessage('Error fetching resources: ' + error.message, 'error');
     }
-}
-
-// Filter resources based on current tab
-function filterResources() {
-    const filteredResources = allResources.filter(resource => {
-        if (currentFilter === 'pending') {
-            return !resource.approved;
-        } else {
-            return resource.approved;
-        }
-    });
-    
-    renderResources(filteredResources);
 }
 
 // Render resources list
@@ -230,7 +206,13 @@ function renderResources(resources) {
                         </span>
                     </div>
                     <span class="text-sm text-gray-500 dark:text-gray-400">
-                        <i class="bi bi-clock"></i> ${resource.formattedDate}
+                        <i class="bi bi-clock"></i> ${new Date(resource.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
                     </span>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">${resource.title}</h3>
@@ -238,10 +220,13 @@ function renderResources(resources) {
                     ${resource.description}
                 </p>
                 <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
-                    <div>
+                    <div class="flex items-center gap-4">
                         <span class="text-xs text-gray-500 dark:text-gray-400">
                             Shared by: ${resource.uploadedBy || 'Anonymous'}
                         </span>
+                        <a href="${resource.url}" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                            <i class="bi bi-link-45deg"></i> View Resource
+                        </a>
                     </div>
                     <div class="flex gap-2">
                         ${currentFilter === 'pending' ? `
@@ -262,141 +247,149 @@ function renderResources(resources) {
     `).join('');
 }
 
-// Approve resource
+// Approve a resource
 async function approveResource(id) {
     try {
         const credentials = getCredentials();
         if (!credentials) {
             clearCredentials();
             updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
-        
-        const response = await fetch(`/admin/resources/${id}/approve`, {
-            method: 'PATCH',
+
+        const response = await fetch(`/api/admin/resources/${id}/approve`, {
+            method: 'PUT',
             headers: {
-                'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Basic ${credentials}`
             }
         });
-        
+
         if (response.status === 401) {
             clearCredentials();
             updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
-        
+
         if (!response.ok) {
-            throw new Error(`Failed to approve resource: ${response.status}`);
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
         }
-        
-        // Check content type before parsing JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response');
-        }
-        
-        await response.json(); // Just to validate the response
-        
-        // Refresh resources
+
+        // Refresh the resources list
         fetchResources();
-        
     } catch (error) {
         console.error('Error approving resource:', error);
-        alert('Failed to approve resource: ' + error.message);
+        showLoginMessage('Error approving resource: ' + error.message, 'error');
     }
 }
 
-// Delete resource
+// Delete a resource
 async function deleteResource(id) {
     if (!confirm('Are you sure you want to delete this resource?')) {
         return;
     }
-    
+
     try {
         const credentials = getCredentials();
         if (!credentials) {
             clearCredentials();
             updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
-        
-        const response = await fetch(`/admin/resources/${id}`, {
+
+        const response = await fetch(`/api/admin/resources/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Basic ${credentials}`
             }
         });
-        
+
         if (response.status === 401) {
             clearCredentials();
             updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
-        
+
         if (!response.ok) {
-            throw new Error(`Failed to delete resource: ${response.status}`);
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
         }
-        
-        // Refresh resources
+
+        // Refresh the resources list
         fetchResources();
-        
     } catch (error) {
         console.error('Error deleting resource:', error);
-        alert('Failed to delete resource: ' + error.message);
+        showLoginMessage('Error deleting resource: ' + error.message, 'error');
     }
 }
 
-// Current resource being edited
-let currentEditId = null;
-
-// Edit resource
+// Edit a resource
 function editResource(id) {
     const resource = allResources.find(r => r._id === id);
-    if (!resource) return;
-    
-    currentEditId = id;
-    
-    // Populate form
-    document.getElementById('editTitle').value = resource.title;
-    document.getElementById('editDescription').value = resource.description;
-    document.getElementById('editSubject').value = resource.subject;
-    document.getElementById('editTag').value = resource.tag;
-    document.getElementById('editUploadedBy').value = resource.uploadedBy || '';
-    
-    // Show modal
-    document.getElementById('editModal').classList.remove('hidden');
+    if (!resource) {
+        showLoginMessage('Resource not found', 'error');
+        return;
+    }
+
+    // Show edit modal
+    const modal = document.getElementById('editModal');
+    if (!modal) {
+        console.error('Edit modal not found');
+        return;
+    }
+
+    // Fill form with resource data
+    const form = document.getElementById('editForm');
+    if (form) {
+        form.dataset.resourceId = id;
+        form.querySelector('#editTitle').value = resource.title;
+        form.querySelector('#editDescription').value = resource.description;
+        form.querySelector('#editSubject').value = resource.subject;
+        form.querySelector('#editTag').value = resource.tag;
+        form.querySelector('#editUrl').value = resource.url;
+        form.querySelector('#editUploadedBy').value = resource.uploadedBy || '';
+    }
+
+    modal.classList.remove('hidden');
 }
 
 // Close edit modal
 function closeEditModal() {
-    document.getElementById('editModal').classList.add('hidden');
-    currentEditId = null;
+    const modal = document.getElementById('editModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 
 // Handle edit form submission
 async function handleEditFormSubmit(e) {
     e.preventDefault();
-    
-    if (!currentEditId) return;
-    
+
+    const form = e.target;
+    const id = form.dataset.resourceId;
+    const credentials = getCredentials();
+
+    if (!credentials) {
+        clearCredentials();
+        updateUI();
+        showLoginMessage('Session expired. Please log in again.', 'error');
+        return;
+    }
+
+    const formData = {
+        title: form.querySelector('#editTitle').value.trim(),
+        description: form.querySelector('#editDescription').value.trim(),
+        subject: form.querySelector('#editSubject').value,
+        tag: form.querySelector('#editTag').value,
+        url: form.querySelector('#editUrl').value.trim(),
+        uploadedBy: form.querySelector('#editUploadedBy').value.trim() || 'Anonymous'
+    };
+
     try {
-        const credentials = getCredentials();
-        if (!credentials) {
-            clearCredentials();
-            updateUI();
-            return;
-        }
-        
-        const formData = {
-            title: document.getElementById('editTitle').value,
-            description: document.getElementById('editDescription').value,
-            subject: document.getElementById('editSubject').value,
-            tag: document.getElementById('editTag').value,
-            uploadedBy: document.getElementById('editUploadedBy').value || 'Anonymous'
-        };
-        
-        const response = await fetch(`/admin/resources/${currentEditId}`, {
+        console.log('Updating resource:', id, formData);
+        const response = await fetch(`/api/admin/resources/${id}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Basic ${credentials}`,
@@ -404,41 +397,34 @@ async function handleEditFormSubmit(e) {
             },
             body: JSON.stringify(formData)
         });
-        
+
         if (response.status === 401) {
             clearCredentials();
             updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
-        
+
         if (!response.ok) {
-            throw new Error(`Failed to update resource: ${response.status}`);
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
         }
-        
-        // Check content type before parsing JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response');
-        }
-        
-        await response.json(); // Just to validate the response
-        
-        // Close modal and refresh
+
+        // Close modal and refresh list
         closeEditModal();
         fetchResources();
-        
+        showLoginMessage('Resource updated successfully', 'success');
     } catch (error) {
         console.error('Error updating resource:', error);
-        alert('Failed to update resource: ' + error.message);
+        showLoginMessage('Error updating resource: ' + error.message, 'error');
     }
 }
 
-// Show login message
+// Show login/error message
 function showLoginMessage(text, type) {
-    const messageEl = document.getElementById('loginMessage');
-    if (messageEl) {
-        messageEl.textContent = text;
-        messageEl.className = `mt-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-        messageEl.classList.remove('hidden');
-    }
+    const messageDiv = document.getElementById('loginMessage');
+    if (!messageDiv) return;
+    
+    messageDiv.textContent = text;
+    messageDiv.className = `mt-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`;
+    messageDiv.style.display = 'block';
 } 
