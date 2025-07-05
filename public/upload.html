@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resource - JEE Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                        <i class="bi bi-book text-2xl"></i>
+                        <span class="font-bold text-xl">JEE Vault</span>
+                    </a>
+                    <div class="hidden md:flex md:space-x-8 md:ml-10">
+                        <a href="/" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="/upload.html" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Upload</a>
+                        <a href="/admin.html" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Admin</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <i class="bi bi-moon-fill text-gray-600 dark:text-gray-400"></i>
+                    </button>
+                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile menu -->
+            <div id="mobileMenu" class="hidden md:hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
+                    <a href="/upload.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Upload</a>
+                    <a href="/admin.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Admin</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Upload Form -->
+    <div class="min-h-screen max-w-2xl mx-auto px-4 py-8 sm:py-12">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+            <div class="text-center mb-6 sm:mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Upload Educational Resource</h2>
+                <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">Share your JEE study materials with the community</p>
+            </div>
+
+            <form id="uploadForm" class="space-y-4 sm:space-y-6">
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                    <input type="text" id="title" name="title" required
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+                    <select id="subject" name="subject" required
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                        <option value="">Select a subject</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Math">Math</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="chapter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chapter</label>
+                    <input type="text" id="chapter" name="chapter" required
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="3"
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PDF File</label>
+                    <div class="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                        <div class="space-y-2 text-center">
+                            <i class="bi bi-cloud-upload text-3xl sm:text-4xl text-gray-400"></i>
+                            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                <label for="file" class="relative cursor-pointer rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input id="file" name="file" type="file" accept=".pdf" class="sr-only" required>
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">PDF up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                        class="w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        <i class="bi bi-cloud-upload mr-2"></i>
+                        Upload Resource
+                    </button>
+                </div>
+            </form>
+
+            <!-- Upload Progress -->
+            <div id="uploadProgress" class="hidden mt-6">
+                <div class="relative pt-1">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 dark:text-blue-400 bg-blue-200 dark:bg-blue-900">
+                                Progress
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span id="progressPercent" class="text-xs font-semibold inline-block text-blue-600 dark:text-blue-400">
+                                0%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200 dark:bg-blue-900">
+                        <div id="progressBar" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/theme.js"></script>
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // File Upload Handling
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('file');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+
+        // Drag and drop functionality
+        const dropZone = fileInput.closest('div');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('subject', document.getElementById('subject').value);
+            formData.append('chapter', document.getElementById('chapter').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                uploadProgress.classList.remove('hidden');
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Resource uploaded successfully!');
+                    form.reset();
+                    uploadProgress.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                    progressPercent.textContent = '0%';
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to upload resource. Please try again.');
+                uploadProgress.classList.add('hidden');
+            }
+        });
+
+        // Simulated upload progress
+        function updateProgress(percent) {
+            progressBar.style.width = `${percent}%`;
+            progressPercent.textContent = `${percent}%`;
+        }
+
+        let progressInterval;
+        form.addEventListener('submit', () => {
+            let progress = 0;
+            progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += 10;
+                    updateProgress(progress);
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html> 
