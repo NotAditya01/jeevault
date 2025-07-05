@@ -40,25 +40,53 @@ console.log(chalk.blue('\n Connecting to MongoDB...\n'));
 // Add connection parameters directly to the URI if not already present
 let mongoUri = config.mongodbUri;
 if (!mongoUri.includes('?')) {
-    mongoUri += '?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=45000';
-} else if (!mongoUri.includes('connectTimeoutMS')) {
-    mongoUri += '&connectTimeoutMS=30000&socketTimeoutMS=45000';
+    mongoUri += '?retryWrites=true&w=majority';
 }
 
-mongoose.connect(mongoUri, getMongoDbOptions())
-    .then(() => console.log(chalk.green('✅ Connected to MongoDB\n')))
-    .catch(err => {
+// Create a cached connection variable
+let cachedConnection = null;
+
+async function connectToDatabase() {
+    if (cachedConnection) {
+        console.log(chalk.blue('Using cached database connection'));
+        return cachedConnection;
+    }
+
+    try {
+        // Set mongoose options for better serverless performance
+        mongoose.set('bufferCommands', false);
+        
+        const connection = await mongoose.connect(mongoUri, getMongoDbOptions());
+        console.log(chalk.green('✅ Connected to MongoDB\n'));
+        
+        cachedConnection = connection;
+        return connection;
+    } catch (err) {
         console.error(chalk.red('❌ MongoDB connection error:'), err);
-        process.exit(1);
-    });
+        throw err;
+    }
+}
+
+// Connect to MongoDB at startup
+connectToDatabase().catch(err => {
+    console.error(chalk.red('Failed to connect to MongoDB:'), err);
+    process.exit(1);
+});
 
 // Add connection event listeners for better error handling
 mongoose.connection.on('error', (err) => {
     console.error(chalk.red(`MongoDB connection error: ${err}`));
+    // Attempt to reconnect
+    setTimeout(() => {
+        connectToDatabase().catch(console.error);
+    }, 5000);
 });
 
 mongoose.connection.on('disconnected', () => {
     console.log(chalk.yellow('MongoDB disconnected. Attempting to reconnect...'));
+    setTimeout(() => {
+        connectToDatabase().catch(console.error);
+    }, 5000);
 });
 
 mongoose.connection.on('reconnected', () => {
@@ -131,6 +159,9 @@ app.post('/api/resources', async (req, res) => {
     console.log(chalk.gray(`Body: ${JSON.stringify(req.body)}`));
     
     try {
+        // Ensure database connection
+        await connectToDatabase();
+        
         const { title, description, subject, tag, url, uploadedBy } = req.body;
 
         // Validate required fields
@@ -145,7 +176,7 @@ app.post('/api/resources', async (req, res) => {
             return res.status(400).json({ error: 'Invalid URL format' });
         }
 
-        // Create new resource
+        // Create new resource with timeout handling
         const resource = new Resource({
             title,
             description,
@@ -153,42 +184,62 @@ app.post('/api/resources', async (req, res) => {
             tag,
             url,
             uploadedBy: uploadedBy || 'Anonymous',
-            approved: false // Always start as unapproved
+            approved: false
         });
 
-        await resource.save();
-        console.log(chalk.green(`✅ Resource saved to database: ${resource._id}`));
+        // Set timeout for save operation
+        const savePromise = resource.save();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Save operation timed out')), 15000)
+        );
+
+        const savedResource = await Promise.race([savePromise, timeoutPromise]);
+        
+        console.log(chalk.green(`✅ Resource saved to database: ${savedResource._id}`));
         res.status(201).json({ 
             success: true, 
             message: 'Your resource has been submitted. It will appear after admin approval.',
-            resource
+            resource: savedResource
         });
     } catch (error) {
         console.error(chalk.red(`❌ Error creating resource: ${error.message}`));
         console.error(chalk.red(error.stack));
-        res.status(500).json({ error: error.message || 'Failed to create resource' });
+        
+        // Send appropriate error message based on error type
+        const errorMessage = error.message === 'Save operation timed out'
+            ? 'Request timed out. Please try again.'
+            : 'Failed to create resource. Please try again later.';
+            
+        res.status(500).json({ error: errorMessage });
     }
 });
 
 // Get all resources (approved only)
 app.get('/api/resources', async (req, res) => {
     try {
+        await connectToDatabase();
+        
         const resources = await Resource.find({ approved: true })
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .maxTimeMS(10000); // Set maximum execution time
         res.json(resources);
     } catch (error) {
         console.error(chalk.red(`❌ Error fetching resources: ${error.message}`));
-        res.status(500).json({ error: 'Failed to fetch resources' });
+        res.status(500).json({ error: 'Failed to fetch resources. Please try again later.' });
     }
 });
 
 // Admin routes
 app.get('/api/admin/resources', authenticateAdmin, async (req, res) => {
     try {
+        await connectToDatabase();
+        
         const { status = 'pending' } = req.query;
         const resources = await Resource.find({ 
-            approved: status === 'approved'  // This will be true for approved, false for pending
-        }).sort({ createdAt: -1 });
+            approved: status === 'approved'
+        })
+        .sort({ createdAt: -1 })
+        .maxTimeMS(10000); // Set maximum execution time
         
         console.log(chalk.blue(`📋 Fetching ${status} resources`));
         console.log(chalk.gray(`Found ${resources.length} resources`));
@@ -196,7 +247,7 @@ app.get('/api/admin/resources', authenticateAdmin, async (req, res) => {
         res.json(resources);
     } catch (error) {
         console.error(chalk.red(`❌ Error fetching admin resources: ${error.message}`));
-        res.status(500).json({ error: 'Failed to fetch resources' });
+        res.status(500).json({ error: 'Failed to fetch resources. Please try again later.' });
     }
 });
 
