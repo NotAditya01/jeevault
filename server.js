@@ -1,22 +1,24 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const moment = require('moment');
+const path = require('path');
 const { upload } = require('./utils/cloudinary');
 const Resource = require('./models/Resource');
 const fs = require('fs');
+const moment = require('moment');
 
 // Debug environment variables
 console.log('Admin username from env:', process.env.ADMIN_USERNAME);
 console.log('Admin password from env:', process.env.ADMIN_PASSWORD ? '[SET]' : '[NOT SET]');
 
 const app = express();
-app.use(express.json());
-app.use(express.static('public'));
 
-// Increase payload size limit for JSON requests
-app.use(express.json({ limit: '40mb' }));
-app.use(express.urlencoded({ extended: true, limit: '40mb' }));
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -73,7 +75,20 @@ const isValidUrl = (url) => {
   }
 };
 
-// Upload route for both PDF files and URLs
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/upload', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'upload.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// API Routes
 app.post('/api/resources', upload.single('file'), async (req, res) => {
     try {
         const { title, description, type, subject, tag } = req.body;
@@ -118,9 +133,9 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
 });
 
 // Get approved resources
-app.get('/resources', async (req, res) => {
+app.get('/api/resources', async (req, res) => {
   try {
-    const resources = await Resource.find({ approved: true })
+    const resources = await Resource.find()
       .sort('-createdAt');
     
     const formattedResources = resources.map(resource => ({
@@ -186,7 +201,12 @@ app.delete('/admin/resources/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Handle 404 - Keep this as the last route
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 }); 
