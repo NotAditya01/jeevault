@@ -15,6 +15,43 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], 
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #fileInputGroup {
+            display: block;
+        }
+        #urlInputGroup {
+            display: none;
         }
     </style>
 </head>
@@ -62,48 +99,39 @@
                 <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">Share your JEE study materials with the community</p>
             </div>
 
-            <div class="mb-6">
-                <div class="flex items-center mb-4">
-                    <input type="radio" id="pdfOption" name="resourceType" value="pdf" checked class="mr-2">
-                    <label for="pdfOption" class="text-gray-700 dark:text-gray-300">Upload PDF File</label>
-                    
-                    <input type="radio" id="urlOption" name="resourceType" value="url" class="ml-6 mr-2">
-                    <label for="urlOption" class="text-gray-700 dark:text-gray-300">Share URL</label>
-                </div>
-            </div>
-
             <form id="uploadForm" class="space-y-4 sm:space-y-6">
-                <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                <div class="form-group">
+                    <label for="title">Title:</label>
                     <input type="text" id="title" name="title" required
                         class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
                 </div>
 
-                <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
-                    <select id="subject" name="subject" required
-                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
-                        <option value="">Select a subject</option>
-                        <option value="Physics">Physics</option>
-                        <option value="Chemistry">Chemistry</option>
-                        <option value="Math">Math</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="chapter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chapter</label>
-                    <input type="text" id="chapter" name="chapter" required
-                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
-                </div>
-
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <div class="form-group">
+                    <label for="description">Description:</label>
                     <textarea id="description" name="description" rows="3"
                         class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base"></textarea>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PDF File</label>
+                <div class="form-group">
+                    <label for="resourceType">Resource Type:</label>
+                    <select id="resourceType" name="resourceType" required
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                        <option value="file">File Upload</option>
+                        <option value="url">URL</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tag">Resource Category:</label>
+                    <select id="tag" name="tag" required
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                        <option value="notes">Notes</option>
+                        <option value="books">Books</option>
+                    </select>
+                </div>
+
+                <div id="fileInputGroup" class="form-group">
+                    <label for="file">File (PDF only):</label>
                     <div class="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                         <div class="space-y-2 text-center">
                             <i class="bi bi-cloud-upload text-3xl sm:text-4xl text-gray-400"></i>
@@ -117,6 +145,12 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400">PDF up to 10MB</p>
                         </div>
                     </div>
+                </div>
+
+                <div id="urlInputGroup" class="form-group">
+                    <label for="url">URL:</label>
+                    <input type="url" id="url" name="url"
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
                 </div>
 
                 <div>
@@ -210,10 +244,11 @@
 
             const formData = new FormData();
             formData.append('title', document.getElementById('title').value);
-            formData.append('subject', document.getElementById('subject').value);
-            formData.append('chapter', document.getElementById('chapter').value);
             formData.append('description', document.getElementById('description').value);
+            formData.append('resourceType', document.getElementById('resourceType').value);
+            formData.append('tag', document.getElementById('tag').value);
             formData.append('file', fileInput.files[0]);
+            formData.append('url', document.getElementById('url').value);
 
             try {
                 uploadProgress.classList.remove('hidden');

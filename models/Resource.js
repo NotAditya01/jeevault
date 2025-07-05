@@ -25,6 +25,11 @@ const resourceSchema = new mongoose.Schema({
         enum: ['file', 'url'],
         required: true
     },
+    tag: {
+        type: String,
+        enum: ['notes', 'books'],
+        required: true
+    },
     uploadedBy: {
         type: String,
         required: true,

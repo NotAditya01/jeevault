@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const moment = require('moment');
 const { upload } = require('./utils/cloudinary');
 const Resource = require('./models/Resource');
+const fs = require('fs');
 
 // Debug environment variables
 console.log('Admin username from env:', process.env.ADMIN_USERNAME);
@@ -73,49 +74,46 @@ const isValidUrl = (url) => {
 };
 
 // Upload route for both PDF files and URLs
-app.post('/upload', upload.single('file'), async (req, res) => {
-  try {
-    const { title, subject, chapter, username, resourceUrl } = req.body;
-    
-    // Handle URL submission
-    if (resourceUrl) {
-      if (!isValidUrl(resourceUrl)) {
-        return res.status(400).json({ error: 'Invalid URL format' });
-      }
+app.post('/api/resources', upload.single('file'), async (req, res) => {
+    try {
+        const { title, description, type, tag } = req.body;
 
-      const resource = new Resource({
-        title,
-        subject,
-        chapter,
-        fileURL: resourceUrl,
-        uploadedBy: username,
-        type: 'url'
-      });
+        if (!title || !description || !type || !tag) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
 
-      await resource.save();
-      return res.status(201).json(resource);
+        const resource = new Resource({
+            title,
+            description,
+            type,
+            tag
+        });
+
+        if (type === 'file') {
+            if (!req.file) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+
+            // Upload file to Cloudinary
+            const result = await uploadToCloudinary(req.file.path);
+            resource.fileUrl = result.secure_url;
+            resource.cloudinaryPublicId = result.public_id;
+
+            // Clean up the temporary file
+            fs.unlinkSync(req.file.path);
+        } else if (type === 'url') {
+            if (!req.body.url) {
+                return res.status(400).json({ error: 'No URL provided' });
+            }
+            resource.url = req.body.url;
+        }
+
+        await resource.save();
+        res.status(201).json(resource);
+    } catch (error) {
+        console.error('Error creating resource:', error);
+        res.status(500).json({ error: 'Failed to create resource' });
     }
-
-    // Handle PDF file upload
-    if (!req.file) {
-      return res.status(400).json({ error: 'No PDF file uploaded and no URL provided' });
-    }
-
-    const resource = new Resource({
-      title,
-      subject,
-      chapter,
-      fileURL: req.file.path,
-      uploadedBy: username,
-      type: 'file'
-    });
-
-    await resource.save();
-    res.status(201).json(resource);
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Upload failed' });
-  }
 });
 
 // Get approved resources
