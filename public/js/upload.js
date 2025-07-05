@@ -1,65 +1,83 @@
-document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const messageDiv = document.getElementById('message');
-    const fileInput = document.getElementById('file');
-    const linkInput = document.getElementById('link');
-    
-    // Validate that either file or link is provided
-    if (!fileInput.files[0] && !linkInput.value) {
-        showMessage('Please provide either a PDF file or an external link', 'error');
-        return;
-    }
-    
-    // Validate that not both file and link are provided
-    if (fileInput.files[0] && linkInput.value) {
-        showMessage('Please provide either a file OR a link, not both', 'error');
-        return;
-    }
-    
-    try {
-        const formData = new FormData();
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('uploadForm');
+    const message = document.getElementById('message');
+    const pdfOption = document.getElementById('pdfOption');
+    const urlOption = document.getElementById('urlOption');
+    const pdfUploadSection = document.getElementById('pdfUploadSection');
+    const urlInputSection = document.getElementById('urlInputSection');
+
+    // Toggle between PDF and URL inputs
+    pdfOption.addEventListener('change', () => {
+        pdfUploadSection.classList.remove('hidden');
+        urlInputSection.classList.add('hidden');
+    });
+
+    urlOption.addEventListener('change', () => {
+        pdfUploadSection.classList.add('hidden');
+        urlInputSection.classList.remove('hidden');
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        // Add basic fields
-        formData.append('title', document.getElementById('title').value);
-        formData.append('subject', document.getElementById('subject').value);
-        formData.append('tags', document.getElementById('tags').value);
-        formData.append('description', document.getElementById('description').value);
+        const formData = new FormData(form);
+        const resourceType = document.querySelector('input[name="resourceType"]:checked').value;
         
-        // Add either file or link
-        if (fileInput.files[0]) {
-            formData.append('file', fileInput.files[0]);
-        } else {
-            formData.append('link', linkInput.value);
+        try {
+            message.className = 'mt-4 text-gray-600 dark:text-gray-400';
+            message.textContent = 'Uploading...';
+            message.classList.remove('hidden');
+
+            let response;
+            
+            if (resourceType === 'url') {
+                // Handle URL submission
+                const data = {
+                    title: formData.get('title'),
+                    subject: formData.get('subject'),
+                    chapter: formData.get('chapter'),
+                    username: formData.get('username'),
+                    resourceUrl: formData.get('resourceUrl')
+                };
+
+                response = await fetch('/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+            } else {
+                // Handle PDF file upload
+                const file = formData.get('file');
+                if (!file || file.size === 0) {
+                    throw new Error('Please select a PDF file');
+                }
+
+                if (file.size > 40 * 1024 * 1024) {
+                    throw new Error('File size exceeds 40MB limit');
+                }
+
+                response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed');
+            }
+
+            message.className = 'mt-4 text-green-600 dark:text-green-400';
+            message.textContent = 'Resource uploaded successfully! It will be visible after admin approval.';
+            form.reset();
+
+        } catch (error) {
+            message.className = 'mt-4 text-red-600 dark:text-red-400';
+            message.textContent = error.message || 'Upload failed. Please try again.';
         }
-        
-        // Disable form while submitting
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Uploading...';
-        
-        // Submit the form
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('Resource submitted successfully! It will be reviewed by an admin.', 'success');
-            e.target.reset();
-        } else {
-            showMessage(result.message || 'Error uploading resource', 'error');
-        }
-    } catch (error) {
-        showMessage('Error uploading resource: ' + error.message, 'error');
-    } finally {
-        // Re-enable form
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        submitButton.disabled = false;
-        submitButton.textContent = 'Submit Resource';
-    }
+    });
 });
 
 // Show message helper

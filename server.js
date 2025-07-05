@@ -13,6 +13,10 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
+// Increase payload size limit for JSON requests
+app.use(express.json({ limit: '40mb' }));
+app.use(express.urlencoded({ extended: true, limit: '40mb' }));
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
@@ -58,13 +62,43 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// Upload route
+// URL validation helper
+const isValidUrl = (url) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Upload route for both PDF files and URLs
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    const { title, subject, chapter, username } = req.body;
+    const { title, subject, chapter, username, resourceUrl } = req.body;
     
+    // Handle URL submission
+    if (resourceUrl) {
+      if (!isValidUrl(resourceUrl)) {
+        return res.status(400).json({ error: 'Invalid URL format' });
+      }
+
+      const resource = new Resource({
+        title,
+        subject,
+        chapter,
+        fileURL: resourceUrl,
+        uploadedBy: username,
+        type: 'url'
+      });
+
+      await resource.save();
+      return res.status(201).json(resource);
+    }
+
+    // Handle PDF file upload
     if (!req.file) {
-      return res.status(400).json({ error: 'No PDF file uploaded' });
+      return res.status(400).json({ error: 'No PDF file uploaded and no URL provided' });
     }
 
     const resource = new Resource({
@@ -133,9 +167,22 @@ app.patch('/admin/resources/:id/approve', authenticateAdmin, async (req, res) =>
 
 app.delete('/admin/resources/:id', authenticateAdmin, async (req, res) => {
   try {
+    const resource = await Resource.findById(req.params.id);
+    if (!resource) {
+      return res.status(404).json({ error: 'Resource not found' });
+    }
+
+    // If it's a file type resource, delete from Cloudinary
+    if (resource.type === 'file' && resource.fileURL) {
+      // Extract public_id from Cloudinary URL
+      const publicId = resource.fileURL.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+    }
+
     await Resource.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (error) {
+    console.error('Delete error:', error);
     res.status(500).json({ error: 'Failed to delete resource' });
   }
 });

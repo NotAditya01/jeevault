@@ -20,7 +20,12 @@ const storage = new CloudinaryStorage({
   }
 });
 
-// Create multer upload middleware
-const upload = multer({ storage: storage });
+// Create multer upload middleware with increased file size limit (40MB)
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 40 * 1024 * 1024 // 40MB in bytes
+  }
+});
 
 module.exports = { upload, cloudinary }; 
