@@ -113,20 +113,32 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="resourceType">Resource Type:</label>
-                    <select id="resourceType" name="resourceType" required
+                    <label for="subject">Subject:</label>
+                    <select id="subject" name="subject" required
                         class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
-                        <option value="file">File Upload</option>
-                        <option value="url">URL</option>
+                        <option value="">Select a subject</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Math">Math</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="tag">Resource Category:</label>
+                    <label for="tag">Resource Type:</label>
                     <select id="tag" name="tag" required
                         class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                        <option value="">Select type</option>
                         <option value="notes">Notes</option>
                         <option value="books">Books</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="resourceType">Upload Type:</label>
+                    <select id="resourceType" name="resourceType" required
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+                        <option value="file">File Upload</option>
+                        <option value="url">URL</option>
                     </select>
                 </div>
 
@@ -245,8 +257,9 @@
             const formData = new FormData();
             formData.append('title', document.getElementById('title').value);
             formData.append('description', document.getElementById('description').value);
-            formData.append('resourceType', document.getElementById('resourceType').value);
+            formData.append('subject', document.getElementById('subject').value);
             formData.append('tag', document.getElementById('tag').value);
+            formData.append('resourceType', document.getElementById('resourceType').value);
             formData.append('file', fileInput.files[0]);
             formData.append('url', document.getElementById('url').value);
 

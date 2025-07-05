@@ -105,38 +105,60 @@
                         </h2>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                        <div class="w-full sm:flex-1">
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="bi bi-search text-gray-400"></i>
-                                </div>
-                                <input type="text" id="searchInput" 
-                                    class="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" 
-                                    placeholder="Search resources...">
-                            </div>
+                    <!-- Resources Section -->
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                        <div class="lg:text-center mb-12">
+                            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+                                Resource Management
+                            </h2>
                         </div>
-                        <select id="statusFilter" 
-                            class="w-full sm:w-auto border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 py-2 px-4">
-                            <option value="">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                        </select>
-                    </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-900">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Resource</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resourcesTable" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                <!-- Resources will be loaded here -->
-                            </tbody>
-                        </table>
+                        <!-- Filters -->
+                        <div class="mb-6 flex flex-wrap gap-4">
+                            <input type="text" id="searchInput" 
+                                class="flex-1 border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" 
+                                placeholder="Search resources...">
+                            
+                            <select id="subjectFilter" 
+                                class="border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+                                <option value="">All Subjects</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Math">Math</option>
+                            </select>
+
+                            <select id="tagFilter" 
+                                class="border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+                                <option value="">All Types</option>
+                                <option value="notes">Notes</option>
+                                <option value="books">Books</option>
+                            </select>
+
+                            <select id="statusFilter" 
+                                class="border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                            </select>
+                        </div>
+
+                        <!-- Resources Table -->
+                        <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subject</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resourcesTable" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Resources will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -245,7 +267,7 @@
         async function loadResources() {
             try {
                 const token = localStorage.getItem('adminToken');
-                const response = await fetch('/admin/resources', {
+                const response = await fetch('/api/admin/resources', {
                     headers: {
                         'Authorization': `Basic ${token}`
                     }
@@ -268,28 +290,41 @@
         // Render resources
         function renderResources(resources) {
             const table = document.getElementById('resourcesTable');
-            const statusFilter = document.getElementById('statusFilter').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const subjectFilter = document.getElementById('subjectFilter').value;
+            const tagFilter = document.getElementById('tagFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
 
             const filteredResources = resources.filter(resource => {
+                const matchesSearch = 
+                    resource.title.toLowerCase().includes(searchTerm) ||
+                    resource.description.toLowerCase().includes(searchTerm);
+                const matchesSubject = !subjectFilter || resource.subject === subjectFilter;
+                const matchesTag = !tagFilter || resource.tag === tagFilter;
                 const matchesStatus = !statusFilter || 
                     (statusFilter === 'approved' && resource.approved) ||
                     (statusFilter === 'pending' && !resource.approved);
-                const matchesSearch = resource.title.toLowerCase().includes(searchTerm) ||
-                    resource.subject.toLowerCase().includes(searchTerm) ||
-                    resource.chapter.toLowerCase().includes(searchTerm);
-                return matchesStatus && matchesSearch;
+                
+                return matchesSearch && matchesSubject && matchesTag && matchesStatus;
             });
 
             table.innerHTML = filteredResources.map(resource => `
                 <tr>
-                    <td class="px-6 py-4">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">${resource.title}</div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">${resource.subject} - ${resource.chapter}</div>
-                        </div>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">${resource.title}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">${resource.description}</div>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                            ${resource.subject}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
+                            ${resource.tag}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 py-1 text-xs font-medium ${
                             resource.approved 
                                 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
@@ -298,8 +333,8 @@
                             ${resource.approved ? 'Approved' : 'Pending'}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-sm font-medium space-x-2">
-                        <a href="${resource.fileURL}" target="_blank" 
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <a href="${resource.type === 'file' ? resource.fileUrl : resource.url}" target="_blank" 
                            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
                             View
                         </a>
@@ -366,14 +401,11 @@
             }
         }
 
-        // Add event listeners for search and filter
-        document.getElementById('searchInput').addEventListener('input', () => {
-            loadResources();
-        });
-
-        document.getElementById('statusFilter').addEventListener('change', () => {
-            loadResources();
-        });
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', () => loadResources());
+        document.getElementById('subjectFilter').addEventListener('change', () => loadResources());
+        document.getElementById('tagFilter').addEventListener('change', () => loadResources());
+        document.getElementById('statusFilter').addEventListener('change', () => loadResources());
 
         // Check auth on page load
         checkAuth();

@@ -76,9 +76,9 @@ const isValidUrl = (url) => {
 // Upload route for both PDF files and URLs
 app.post('/api/resources', upload.single('file'), async (req, res) => {
     try {
-        const { title, description, type, tag } = req.body;
+        const { title, description, type, subject, tag } = req.body;
 
-        if (!title || !description || !type || !tag) {
+        if (!title || !description || !type || !subject || !tag) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -86,6 +86,7 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
             title,
             description,
             type,
+            subject,
             tag
         });
 
