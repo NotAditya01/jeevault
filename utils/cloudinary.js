@@ -1,12 +1,13 @@
 const cloudinary = require('cloudinary').v2;
 const { Readable } = require('stream');
 const chalk = require('chalk');
+const { config } = require('./config');
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: config.cloudinary.cloudName,
+  api_key: config.cloudinary.apiKey,
+  api_secret: config.cloudinary.apiSecret,
   secure: true
 });
 
@@ -59,9 +60,9 @@ const uploadPdfToCloudinary = async (buffer, filename) => {
  */
 const isCloudinaryConfigured = () => {
   const isConfigured = 
-    process.env.CLOUDINARY_CLOUD_NAME && 
-    process.env.CLOUDINARY_API_KEY && 
-    process.env.CLOUDINARY_API_SECRET;
+    config.cloudinary.cloudName && 
+    config.cloudinary.apiKey && 
+    config.cloudinary.apiSecret;
   
   if (!isConfigured) {
     console.log(chalk.yellow('⚠️ Cloudinary is not configured. PDF uploads will not work in production.'));

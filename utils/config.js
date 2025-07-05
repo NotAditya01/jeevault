@@ -5,20 +5,33 @@ const requiredEnvVars = {
     // MongoDB
     MONGODB_URI: 'MongoDB connection string',
     
-    // Admin Authentication
+    // Admin credentials
     ADMIN_USERNAME: 'Admin username',
     ADMIN_PASSWORD: 'Admin password',
     
-    // Optional with defaults
+    // Server configuration
     PORT: 'Server port (default: 3000)'
 };
 
-// Validate environment variables
+// Define optional environment variables
+const optionalEnvVars = {
+    // Cloudinary configuration (optional but recommended for production)
+    CLOUDINARY_CLOUD_NAME: 'dtgruon9i',
+    CLOUDINARY_API_KEY: '165231835663976',
+    CLOUDINARY_API_SECRET: 'JT92rPn64_HnnGR2uWfeeLwq-6E',
+    
+    // MongoDB connection options (optional)
+    MONGODB_CONNECTION_TIMEOUT: 'MongoDB connection timeout in ms (default: 30000)',
+    MONGODB_SOCKET_TIMEOUT: 'MongoDB socket timeout in ms (default: 45000)'
+};
+
 function validateConfig() {
     console.log(chalk.blue('\n🔍 Checking environment variables...\n'));
     
     let missingVars = [];
     let configuredVars = [];
+    let optionalConfiguredVars = [];
+    let optionalMissingVars = [];
     
     // Check each required variable
     for (const [key, description] of Object.entries(requiredEnvVars)) {
@@ -34,7 +47,7 @@ function validateConfig() {
         if (!process.env[key]) {
             missingVars.push({ key, description });
         } else {
-            // For sensitive values, just show [SET] instead of the actual value
+           
             const isSensitive = key.includes('PASSWORD') || 
                               key.includes('SECRET') || 
                               key.includes('API_KEY') ||
@@ -48,11 +61,45 @@ function validateConfig() {
         }
     }
     
-    // Log configured variables
+    // Check optional variables
+    for (const [key, description] of Object.entries(optionalEnvVars)) {
+        if (process.env[key]) {
+            const isSensitive = key.includes('PASSWORD') || 
+                              key.includes('SECRET') || 
+                              key.includes('API_KEY');
+            
+            optionalConfiguredVars.push({
+                key,
+                value: isSensitive ? '[SET]' : process.env[key],
+                description
+            });
+        } else {
+            optionalMissingVars.push({ key, description });
+        }
+    }
+
     if (configuredVars.length > 0) {
-        console.log(chalk.green('✅ Configured Variables:'));
+        console.log(chalk.green('✅ Configured Required Variables:'));
         configuredVars.forEach(({ key, value, description }) => {
             console.log(chalk.green(`   ${key}: ${value}`));
+            console.log(chalk.gray(`      Description: ${description}`));
+        });
+        console.log('');
+    }
+    
+    if (optionalConfiguredVars.length > 0) {
+        console.log(chalk.green('✅ Configured Optional Variables:'));
+        optionalConfiguredVars.forEach(({ key, value, description }) => {
+            console.log(chalk.green(`   ${key}: ${value}`));
+            console.log(chalk.gray(`      Description: ${description}`));
+        });
+        console.log('');
+    }
+    
+    if (optionalMissingVars.length > 0) {
+        console.log(chalk.yellow('⚠️ Missing Optional Variables:'));
+        optionalMissingVars.forEach(({ key, description }) => {
+            console.log(chalk.yellow(`   ${key}`));
             console.log(chalk.gray(`      Description: ${description}`));
         });
         console.log('');
@@ -67,7 +114,7 @@ function validateConfig() {
         });
         console.log('');
         
-        // Show example .env format
+    
         console.log(chalk.yellow('📝 Add these to your .env file:'));
         console.log(chalk.yellow('\n```'));
         missingVars.forEach(({ key }) => {
@@ -78,19 +125,39 @@ function validateConfig() {
         throw new Error('Missing required environment variables');
     }
     
-    console.log(chalk.green('✨ All required environment variables are configured!\n'));
+    console.log(chalk.green('✅ All required environment variables are configured!\n'));
     return true;
+}
+
+// Get MongoDB connection options
+function getMongoDbOptions() {
+    return {
+        serverSelectionTimeoutMS: parseInt(process.env.MONGODB_CONNECTION_TIMEOUT || '30000'),
+        socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
+        connectTimeoutMS: parseInt(process.env.MONGODB_CONNECTION_TIMEOUT || '30000'),
+        keepAlive: true,
+        keepAliveInitialDelay: 300000, // 5 minutes
+        retryWrites: true,
+        maxPoolSize: 10,
+        minPoolSize: 1
+    };
 }
 
 // Export configuration
 module.exports = {
     validateConfig,
+    getMongoDbOptions,
     config: {
         port: process.env.PORT || 3000,
         mongodbUri: process.env.MONGODB_URI,
         admin: {
             username: process.env.ADMIN_USERNAME,
             password: process.env.ADMIN_PASSWORD
+        },
+        cloudinary: {
+            cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+            apiKey: process.env.CLOUDINARY_API_KEY,
+            apiSecret: process.env.CLOUDINARY_API_SECRET
         }
     }
 }; 

@@ -7,7 +7,7 @@ const Resource = require('./models/Resource');
 const fs = require('fs');
 const moment = require('moment');
 const chalk = require('chalk');
-const { validateConfig, config } = require('./utils/config');
+const { validateConfig, config, getMongoDbOptions } = require('./utils/config');
 const { uploadPdfToCloudinary, isCloudinaryConfigured } = require('./utils/cloudinary');
 
 // Validate environment variables before starting
@@ -45,14 +45,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
-// Connect to MongoDB
+// Connect to MongoDB with improved connection options
 console.log(chalk.blue('\n Connecting to MongoDB...\n'));
-mongoose.connect(config.mongodbUri)
+mongoose.connect(config.mongodbUri, getMongoDbOptions())
     .then(() => console.log(chalk.green('✅ Connected to MongoDB\n')))
     .catch(err => {
         console.error(chalk.red('❌ MongoDB connection error:'), err);
         process.exit(1);
     });
+
+// Add connection event listeners for better error handling
+mongoose.connection.on('error', (err) => {
+    console.error(chalk.red(`MongoDB connection error: ${err}`));
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log(chalk.yellow('MongoDB disconnected. Attempting to reconnect...'));
+});
+
+mongoose.connection.on('reconnected', () => {
+    console.log(chalk.green('MongoDB reconnected'));
+});
 
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
