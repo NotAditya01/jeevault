@@ -101,6 +101,15 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// For backward compatibility - support .html extension too
+app.get('/upload.html', (req, res) => {
+  res.redirect('/upload');
+});
+
+app.get('/admin.html', (req, res) => {
+  res.redirect('/admin');
+});
+
 // API Routes
 app.post('/api/resources', upload.single('file'), async (req, res) => {
     console.log(chalk.blue('📝 Resource upload request received'));

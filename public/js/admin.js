@@ -1,149 +1,243 @@
 // Check if admin is logged in
 const isLoggedIn = () => localStorage.getItem('adminLoggedIn') === 'true';
 
+// Store admin credentials securely
+function storeCredentials(username, password) {
+    localStorage.setItem('adminCredentials', btoa(`${username}:${password}`));
+    localStorage.setItem('adminLoggedIn', 'true');
+}
+
+// Get stored credentials
+function getCredentials() {
+    const credentials = localStorage.getItem('adminCredentials');
+    return credentials || null;
+}
+
+// Clear credentials on logout
+function clearCredentials() {
+    localStorage.removeItem('adminCredentials');
+    localStorage.removeItem('adminLoggedIn');
+}
+
+// Track current filter state
+let currentFilter = 'pending'; // 'pending' or 'approved'
+
 // Show/hide appropriate sections based on login state
 function updateUI() {
-    document.getElementById('loginForm').style.display = isLoggedIn() ? 'none' : 'block';
-    document.getElementById('adminDashboard').style.display = isLoggedIn() ? 'block' : 'none';
+    const loginForm = document.getElementById('loginForm');
+    const adminPanel = document.getElementById('adminPanel');
     
     if (isLoggedIn()) {
+        loginForm.style.display = 'none';
+        adminPanel.style.display = 'block';
         fetchResources();
+    } else {
+        loginForm.style.display = 'flex';
+        adminPanel.style.display = 'none';
     }
 }
 
 // Handle login form submission
-document.querySelector('#loginForm form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.querySelector('#loginForm form');
     
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    try {
-        const response = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
-        });
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        const result = await response.json();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
         
-        if (result.success) {
-            localStorage.setItem('adminLoggedIn', 'true');
-            updateUI();
-        } else {
-            showLoginMessage('Invalid credentials', 'error');
+        try {
+            const response = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Store credentials for future API calls
+                storeCredentials(username, password);
+                updateUI();
+            } else {
+                showLoginMessage('Invalid credentials', 'error');
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            showLoginMessage('Error logging in: ' + error.message, 'error');
         }
-    } catch (error) {
-        showLoginMessage('Error logging in: ' + error.message, 'error');
-    }
-});
+    });
 
-// Handle logout
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('adminLoggedIn');
+    // Handle logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            clearCredentials();
+            updateUI();
+        });
+    }
+
+    // Handle tab switching
+    const pendingTab = document.getElementById('pendingTab');
+    const approvedTab = document.getElementById('approvedTab');
+
+    if (pendingTab && approvedTab) {
+        pendingTab.addEventListener('click', () => {
+            currentFilter = 'pending';
+            updateTabs();
+            filterResources();
+        });
+
+        approvedTab.addEventListener('click', () => {
+            currentFilter = 'approved';
+            updateTabs();
+            filterResources();
+        });
+    }
+
+    // Handle edit modal close button
+    const closeModalBtn = document.getElementById('closeModal');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeEditModal);
+    }
+
+    // Handle edit form submission
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+        editForm.addEventListener('submit', handleEditFormSubmit);
+    }
+
+    // Initialize UI
     updateUI();
 });
+
+// Update tab styles based on current filter
+function updateTabs() {
+    const pendingTab = document.getElementById('pendingTab');
+    const approvedTab = document.getElementById('approvedTab');
+
+    if (currentFilter === 'pending') {
+        pendingTab.className = 'py-4 px-1 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 font-medium text-sm';
+        approvedTab.className = 'py-4 px-1 text-gray-500 dark:text-gray-400 font-medium text-sm';
+    } else {
+        approvedTab.className = 'py-4 px-1 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 font-medium text-sm';
+        pendingTab.className = 'py-4 px-1 text-gray-500 dark:text-gray-400 font-medium text-sm';
+    }
+}
+
+// Store all resources for filtering
+let allResources = [];
 
 // Fetch all resources
 async function fetchResources() {
     try {
-        const response = await fetch('/api/admin/resources');
-        const resources = await response.json();
-        renderResources(resources);
+        const credentials = getCredentials();
+        if (!credentials) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
+        const response = await fetch('/admin/resources', {
+            headers: {
+                'Authorization': `Basic ${credentials}`
+            }
+        });
+        
+        if (response.status === 401) {
+            // Unauthorized, log out
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
+        allResources = await response.json();
+        filterResources();
     } catch (error) {
         console.error('Error fetching resources:', error);
-        alert('Error fetching resources. Please try again.');
+        showLoginMessage('Error fetching resources: ' + error.message, 'error');
     }
+}
+
+// Filter resources based on current tab
+function filterResources() {
+    const filteredResources = allResources.filter(resource => {
+        if (currentFilter === 'pending') {
+            return !resource.approved;
+        } else {
+            return resource.approved;
+        }
+    });
+    
+    renderResources(filteredResources);
 }
 
 // Render resources list
 function renderResources(resources) {
     const list = document.getElementById('resourcesList');
     
+    if (!list) {
+        console.error('Resources list element not found');
+        return;
+    }
+    
+    if (resources.length === 0) {
+        list.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="bi bi-inbox text-5xl text-gray-400 dark:text-gray-600"></i>
+                <p class="mt-4 text-gray-600 dark:text-gray-400">No ${currentFilter} resources available.</p>
+            </div>
+        `;
+        return;
+    }
+    
     list.innerHTML = resources.map(resource => `
-        <div class="bg-gray-800 rounded-2xl shadow-md p-6 ${resource.approved ? 'border-l-4 border-green-500' : 'border-l-4 border-yellow-500'}">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h3 class="text-xl font-semibold text-white">${resource.title}</h3>
-                    <p class="text-gray-400 text-sm mt-1">Status: ${resource.approved ? 'Approved' : 'Pending'}</p>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                            ${resource.subject}
+                        </span>
+                        <span class="px-2 py-1 text-xs font-medium ${resource.approved ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'} rounded-full">
+                            ${resource.approved ? 'Approved' : 'Pending'}
+                        </span>
+                    </div>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                        <i class="bi bi-clock"></i> ${resource.formattedDate}
+                    </span>
                 </div>
-                <span class="px-3 py-1 bg-gray-700 text-sm rounded-full">${resource.subject}</span>
-            </div>
-            
-            <p class="text-gray-400 text-sm mb-4">${resource.description || ''}</p>
-            
-            <div class="flex flex-wrap gap-2 mb-4">
-                ${resource.tags.map(tag => `
-                    <span class="px-2 py-1 bg-gray-700 text-xs rounded-full">${tag}</span>
-                `).join('')}
-            </div>
-            
-            <div class="mb-4">
-                <strong class="text-sm text-gray-300">Resource Link:</strong>
-                <a href="${resource.filePath || resource.externalLink}" target="_blank" 
-                    class="text-primary hover:underline text-sm ml-2">
-                    ${resource.filePath ? 'Download File' : resource.externalLink}
-                </a>
-            </div>
-            
-            <div class="flex flex-wrap gap-3">
-                ${!resource.approved ? `
-                    <button onclick="approveResource('${resource._id}')"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                        ✅ Approve
-                    </button>
-                ` : ''}
-                
-                <button onclick="editResource('${resource._id}')"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                    ✏️ Edit
-                </button>
-                
-                <button onclick="deleteResource('${resource._id}')"
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                    ❌ Delete
-                </button>
-            </div>
-            
-            <div id="editForm-${resource._id}" class="hidden mt-4 space-y-4">
-                <input type="text" value="${resource.title}" 
-                    class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    id="edit-title-${resource._id}"
-                    placeholder="Enter resource title">
-                    
-                <select class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    id="edit-subject-${resource._id}">
-                    <option value="">Select subject</option>
-                    <option value="Physics" ${resource.subject === 'Physics' ? 'selected' : ''}>Physics</option>
-                    <option value="Chemistry" ${resource.subject === 'Chemistry' ? 'selected' : ''}>Chemistry</option>
-                    <option value="Math" ${resource.subject === 'Math' ? 'selected' : ''}>Math</option>
-                </select>
-                
-                <input type="text" value="${resource.tags.join(', ')}" 
-                    class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    id="edit-tags-${resource._id}"
-                    placeholder="Enter tags (comma-separated)">
-                    
-                <textarea class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    id="edit-description-${resource._id}"
-                    placeholder="Enter resource description">${resource.description || ''}</textarea>
-                    
-                <input type="text" value="${resource.externalLink || ''}"
-                    class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    id="edit-link-${resource._id}"
-                    placeholder="Enter external link (optional)">
-                    
-                <div class="flex gap-2">
-                    <button onclick="saveEdit('${resource._id}')"
-                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                        Save Changes
-                    </button>
-                    <button onclick="cancelEdit('${resource._id}')"
-                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                        Cancel
-                    </button>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">${resource.title}</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                    ${resource.description}
+                </p>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex gap-2">
+                        ${!resource.approved ? `
+                            <button onclick="approveResource('${resource._id}')"
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                <i class="bi bi-check-circle mr-2"></i> Approve
+                            </button>
+                        ` : ''}
+                        <button onclick="editResource('${resource._id}')"
+                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-pencil mr-2"></i> Edit
+                        </button>
+                        <button onclick="deleteResource('${resource._id}')"
+                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <i class="bi bi-trash mr-2"></i> Delete
+                        </button>
+                    </div>
+                    <a href="${resource.type === 'file' ? resource.fileUrl : resource.url}" target="_blank" 
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <i class="bi bi-${resource.type === 'file' ? 'download' : 'link-45deg'} mr-2"></i> 
+                        ${resource.type === 'file' ? 'Download' : 'View'}
+                    </a>
                 </div>
             </div>
         </div>
@@ -153,22 +247,39 @@ function renderResources(resources) {
 // Resource actions
 async function approveResource(id) {
     try {
-        const response = await fetch(`/api/admin/approve/${id}`, {
-            method: 'POST',
+        const credentials = getCredentials();
+        if (!credentials) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
+        const response = await fetch(`/admin/resources/${id}/approve`, {
+            method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${credentials}`
             }
         });
         
+        if (response.status === 401) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
         if (response.ok) {
             await fetchResources(); // Refresh the list
+            showLoginMessage('Resource approved successfully!', 'success');
         } else {
             const error = await response.json();
-            alert('Error approving resource: ' + error.message);
+            showLoginMessage('Error approving resource: ' + (error.error || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error approving resource:', error);
-        alert('Error approving resource. Please try again.');
+        showLoginMessage('Error approving resource. Please try again.', 'error');
     }
 }
 
@@ -178,71 +289,141 @@ async function deleteResource(id) {
     }
     
     try {
-        const response = await fetch(`/api/admin/delete/${id}`, {
+        const credentials = getCredentials();
+        if (!credentials) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
+        const response = await fetch(`/admin/resources/${id}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${credentials}`
             }
         });
         
+        if (response.status === 401) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
         if (response.ok) {
             await fetchResources(); // Refresh the list
+            showLoginMessage('Resource deleted successfully!', 'success');
         } else {
             const error = await response.json();
-            alert('Error deleting resource: ' + error.message);
+            showLoginMessage('Error deleting resource: ' + (error.error || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error deleting resource:', error);
-        alert('Error deleting resource. Please try again.');
+        showLoginMessage('Error deleting resource. Please try again.', 'error');
     }
 }
 
+// Edit resource functionality
+let currentEditId = null;
+
 function editResource(id) {
-    document.getElementById(`editForm-${id}`).style.display = 'block';
+    currentEditId = id;
+    const resource = allResources.find(r => r._id === id);
+    
+    if (!resource) {
+        showLoginMessage('Resource not found', 'error');
+        return;
+    }
+    
+    // Populate form fields
+    document.getElementById('editId').value = resource._id;
+    document.getElementById('editTitle').value = resource.title;
+    document.getElementById('editDescription').value = resource.description;
+    document.getElementById('editSubject').value = resource.subject;
+    document.getElementById('editTag').value = resource.tag;
+    document.getElementById('editUploadedBy').value = resource.uploadedBy || '';
+    
+    // Show modal
+    document.getElementById('editModal').style.display = 'flex';
 }
 
-function cancelEdit(id) {
-    document.getElementById(`editForm-${id}`).style.display = 'none';
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    currentEditId = null;
 }
 
-async function saveEdit(id) {
-    const data = {
-        title: document.getElementById(`edit-title-${id}`).value,
-        subject: document.getElementById(`edit-subject-${id}`).value,
-        tags: document.getElementById(`edit-tags-${id}`).value,
-        description: document.getElementById(`edit-description-${id}`).value,
-        link: document.getElementById(`edit-link-${id}`).value
-    };
+async function handleEditFormSubmit(e) {
+    e.preventDefault();
+    
+    if (!currentEditId) {
+        showLoginMessage('No resource selected for editing', 'error');
+        return;
+    }
+    
+    const title = document.getElementById('editTitle').value;
+    const description = document.getElementById('editDescription').value;
+    const subject = document.getElementById('editSubject').value;
+    const tag = document.getElementById('editTag').value;
+    const uploadedBy = document.getElementById('editUploadedBy').value;
+    
+    if (!title || !description || !subject || !tag) {
+        showLoginMessage('Please fill in all required fields', 'error');
+        return;
+    }
     
     try {
-        const response = await fetch(`/api/admin/edit/${id}`, {
+        const credentials = getCredentials();
+        if (!credentials) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
+        const response = await fetch(`/admin/resources/${currentEditId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${credentials}`
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                title,
+                description,
+                subject,
+                tag,
+                uploadedBy: uploadedBy || 'Anonymous'
+            })
         });
         
+        if (response.status === 401) {
+            clearCredentials();
+            updateUI();
+            showLoginMessage('Session expired. Please log in again.', 'error');
+            return;
+        }
+        
         if (response.ok) {
-            document.getElementById(`editForm-${id}`).style.display = 'none';
+            closeEditModal();
             await fetchResources(); // Refresh the list
+            showLoginMessage('Resource updated successfully!', 'success');
         } else {
             const error = await response.json();
-            alert('Error updating resource: ' + error.message);
+            showLoginMessage('Error updating resource: ' + (error.error || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error updating resource:', error);
-        alert('Error updating resource. Please try again.');
+        showLoginMessage('Error updating resource. Please try again.', 'error');
     }
 }
 
 // Show login message helper
 function showLoginMessage(text, type) {
-    const messageDiv = document.getElementById('loginMessage');
-    messageDiv.textContent = text;
-    messageDiv.className = `rounded-lg p-4 ${type === 'success' ? 'bg-green-800' : 'bg-red-800'} text-white`;
-    messageDiv.style.display = 'block';
-}
-
-// Initialize UI
-updateUI(); 
+    const messageDiv = document.getElementById('statusMessage');
+    if (messageDiv) {
+        messageDiv.textContent = text;
+        messageDiv.className = `mt-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`;
+        messageDiv.style.display = 'block';
+    }
+} 
