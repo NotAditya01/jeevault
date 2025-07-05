@@ -131,13 +131,10 @@ function validateConfig() {
 
 // Get MongoDB connection options
 function getMongoDbOptions() {
+    // For older MongoDB drivers, use a simple configuration
+    // without any options that might not be supported
     return {
-        serverSelectionTimeoutMS: parseInt(process.env.MONGODB_CONNECTION_TIMEOUT || '30000'),
-        socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
-        connectTimeoutMS: parseInt(process.env.MONGODB_CONNECTION_TIMEOUT || '30000'),
-        retryWrites: true,
-        maxPoolSize: 10,
-        minPoolSize: 1
+        // No additional options - use connection string parameters instead
     };
 }
 

@@ -47,7 +47,16 @@ app.use('/uploads', express.static('uploads'));
 
 // Connect to MongoDB with improved connection options
 console.log(chalk.blue('\n Connecting to MongoDB...\n'));
-mongoose.connect(config.mongodbUri, getMongoDbOptions())
+
+// Add connection parameters directly to the URI if not already present
+let mongoUri = config.mongodbUri;
+if (!mongoUri.includes('?')) {
+    mongoUri += '?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=45000';
+} else if (!mongoUri.includes('connectTimeoutMS')) {
+    mongoUri += '&connectTimeoutMS=30000&socketTimeoutMS=45000';
+}
+
+mongoose.connect(mongoUri, getMongoDbOptions())
     .then(() => console.log(chalk.green('✅ Connected to MongoDB\n')))
     .catch(err => {
         console.error(chalk.red('❌ MongoDB connection error:'), err);
@@ -176,6 +185,14 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
                 }
                 
                 try {
+                    // Make sure we have the file buffer
+                    if (!req.file || !req.file.buffer) {
+                        console.error(chalk.red('❌ No file buffer available'));
+                        return res.status(400).json({ error: 'File upload failed - no data received' });
+                    }
+                    
+                    console.log(chalk.blue(`📊 Received file: ${req.file.originalname}, size: ${req.file.size} bytes`));
+                    
                     // Upload to Cloudinary
                     const cloudinaryResult = await uploadPdfToCloudinary(
                         req.file.buffer, 

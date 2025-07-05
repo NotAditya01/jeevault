@@ -21,12 +21,17 @@ const uploadPdfToCloudinary = async (buffer, filename) => {
   try {
     console.log(chalk.blue(`🚀 Uploading file to Cloudinary: ${filename}`));
     
+    // Check if we have a valid buffer
+    if (!buffer || buffer.length === 0) {
+      console.error(chalk.red('❌ Invalid or empty buffer provided for upload'));
+      throw new Error('Invalid or empty file buffer');
+    }
+    
+    console.log(chalk.blue(`📊 Buffer size: ${buffer.length} bytes`));
+    
+    // Use a simpler approach with buffer upload instead of streaming
     return new Promise((resolve, reject) => {
-      // Create a readable stream from buffer
-      const stream = Readable.from(buffer);
-      
-      // Create upload stream to Cloudinary
-      const uploadStream = cloudinary.uploader.upload_stream(
+      cloudinary.uploader.upload_stream(
         {
           resource_type: 'raw', // For PDFs and other non-image files
           folder: 'jee-vault-pdfs',
@@ -43,10 +48,7 @@ const uploadPdfToCloudinary = async (buffer, filename) => {
           console.log(chalk.green(`✅ File uploaded to Cloudinary: ${result.secure_url}`));
           resolve(result);
         }
-      );
-      
-      // Pipe the readable stream to the upload stream
-      stream.pipe(uploadStream);
+      ).end(buffer);
     });
   } catch (error) {
     console.error(chalk.red(`❌ Error in uploadPdfToCloudinary: ${error.message}`));
