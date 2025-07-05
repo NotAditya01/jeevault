@@ -135,8 +135,6 @@ function getMongoDbOptions() {
         serverSelectionTimeoutMS: parseInt(process.env.MONGODB_CONNECTION_TIMEOUT || '30000'),
         socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
         connectTimeoutMS: parseInt(process.env.MONGODB_CONNECTION_TIMEOUT || '30000'),
-        keepAlive: true,
-        keepAliveInitialDelay: 300000, // 5 minutes
         retryWrites: true,
         maxPoolSize: 10,
         minPoolSize: 1
