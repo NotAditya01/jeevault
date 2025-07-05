@@ -127,7 +127,19 @@
                     </select>
                 </div>
 
-             
+                <div class="mb-6">
+                    <label for="resourceType" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Resource Type</label>
+                    <select id="resourceType" name="resourceType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <option value="file">Upload File</option>
+                        <option value="url">External URL</option>
+                    </select>
+                    <p class="mt-2 text-sm text-yellow-600 dark:text-yellow-400">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Note: File uploads are only supported in the development environment. 
+                        In production, please use URL resources instead.
+                    </p>
+                </div>
+
                 <div id="fileInputGroup" class="form-group transition-all duration-300">
                     <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File (PDF only)</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300">

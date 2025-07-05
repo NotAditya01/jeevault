@@ -132,6 +132,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (contentType && contentType.includes('application/json')) {
                         const errorData = await response.json();
                         errorMessage = errorData.error || errorMessage;
+                        
+                        // Check if this is a production environment error
+                        if (errorData.production) {
+                            // Switch to URL input
+                            resourceTypeSelect.value = 'url';
+                            resourceTypeSelect.dispatchEvent(new Event('change'));
+                            showMessage('File uploads are not supported in the production environment. Please use URL resources instead.', 'error');
+                            
+                            // Re-enable submit button
+                            if (submitButton) {
+                                submitButton.disabled = false;
+                                submitButton.innerHTML = 'Submit Resource';
+                            }
+                            
+                            // Hide progress
+                            uploadProgress.classList.add('hidden');
+                            return;
+                        }
                     } else {
                         errorMessage = `Server error: ${response.status} ${response.statusText}`;
                     }

@@ -145,6 +145,15 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
 
+            // Check if we're in production (Vercel)
+            if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+                console.log(chalk.yellow('⚠️ File uploads not supported in production environment'));
+                return res.status(400).json({ 
+                    error: 'File uploads are not supported in the production environment. Please use URL resources instead.',
+                    production: true
+                });
+            }
+
             // Ensure uploads directory exists
             const uploadsDir = path.join(__dirname, 'uploads');
             if (!fs.existsSync(uploadsDir)) {

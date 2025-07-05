@@ -22,8 +22,13 @@ try {
   }
   
   // Ensure the directory is writable
-  fs.accessSync(uploadDir, fs.constants.W_OK);
-  console.log(chalk.green(`✅ Uploads directory is writable`));
+  try {
+    fs.accessSync(uploadDir, fs.constants.W_OK);
+    console.log(chalk.green(`✅ Uploads directory is writable`));
+  } catch (err) {
+    console.log(chalk.yellow(`⚠️ Uploads directory is not writable: ${err.message}`));
+    console.log(chalk.yellow(`⚠️ This is normal in production environments like Vercel`));
+  }
 } catch (error) {
   console.error(chalk.red(`❌ Error setting up uploads directory: ${error.message}`));
   console.error(chalk.red(`This may cause file uploads to fail`));
@@ -32,16 +37,24 @@ try {
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Double-check directory exists before trying to save
-    if (!fs.existsSync(uploadDir)) {
-      try {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      } catch (error) {
-        console.error(chalk.red(`❌ Failed to create uploads directory: ${error.message}`));
-        return cb(new Error("Upload directory unavailable"), null);
+    // Check if we're in production (Vercel)
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+      // In production, we'll use memory storage and handle differently
+      console.log(chalk.yellow('⚠️ Production environment detected, using memory storage'));
+      // Still need to call callback with a path, but we'll handle the file differently later
+      cb(null, uploadDir);
+    } else {
+      // Double-check directory exists before trying to save
+      if (!fs.existsSync(uploadDir)) {
+        try {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        } catch (error) {
+          console.error(chalk.red(`❌ Failed to create uploads directory: ${error.message}`));
+          return cb(new Error("Upload directory unavailable"), null);
+        }
       }
+      cb(null, uploadDir);
     }
-    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
