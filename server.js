@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const { upload } = require('./utils/cloudinary');
+const { upload, cloudinary } = require('./utils/cloudinary');
 const Resource = require('./models/Resource');
 const fs = require('fs');
 const moment = require('moment');
@@ -88,24 +88,38 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// Function to upload file to Cloudinary
+async function uploadToCloudinary(filePath) {
+    try {
+        const result = await cloudinary.uploader.upload(filePath, {
+            resource_type: 'raw',
+            folder: 'jee_vault_uploads'
+        });
+        return result;
+    } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        throw new Error('Failed to upload file to cloud storage');
+    }
+}
+
 // API Routes
 app.post('/api/resources', upload.single('file'), async (req, res) => {
     try {
         const { title, description, type, subject, tag } = req.body;
 
-        if (!title || !description || !type || !subject || !tag) {
+        if (!title || !description || !subject || !tag) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
         const resource = new Resource({
             title,
             description,
-            type,
             subject,
+            type: type || 'file',
             tag
         });
 
-        if (type === 'file') {
+        if (type === 'file' || !type) {
             if (!req.file) {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
@@ -128,7 +142,7 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
         res.status(201).json(resource);
     } catch (error) {
         console.error('Error creating resource:', error);
-        res.status(500).json({ error: 'Failed to create resource' });
+        res.status(500).json({ error: error.message || 'Failed to create resource' });
     }
 });
 

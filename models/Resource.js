@@ -6,19 +6,27 @@ const resourceSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    description: {
+        type: String,
+        required: true,
+        trim: true
+    },
     subject: {
         type: String,
         required: true,
         trim: true
     },
-    chapter: {
+    fileUrl: {
         type: String,
-        required: true,
-        trim: true
+        required: function() {
+            return this.type === 'file';
+        }
     },
-    fileURL: {
+    url: {
         type: String,
-        required: true
+        required: function() {
+            return this.type === 'url';
+        }
     },
     type: {
         type: String,
@@ -29,6 +37,9 @@ const resourceSchema = new mongoose.Schema({
         type: String,
         enum: ['notes', 'books'],
         required: true
+    },
+    cloudinaryPublicId: {
+        type: String
     },
     uploadedBy: {
         type: String,

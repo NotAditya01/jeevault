@@ -266,7 +266,7 @@
             try {
                 uploadProgress.classList.remove('hidden');
                 
-                const response = await fetch('/api/upload', {
+                const response = await fetch('/api/resources', {
                     method: 'POST',
                     body: formData
                 });
@@ -278,7 +278,8 @@
                     progressBar.style.width = '0%';
                     progressPercent.textContent = '0%';
                 } else {
-                    throw new Error('Upload failed');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Upload failed');
                 }
             } catch (error) {
                 console.error('Error:', error);
