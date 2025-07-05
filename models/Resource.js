@@ -38,12 +38,10 @@ const resourceSchema = new mongoose.Schema({
         enum: ['notes', 'books'],
         required: true
     },
-    cloudinaryPublicId: {
-        type: String
-    },
     uploadedBy: {
         type: String,
-        required: true,
+        required: false,
+        default: 'Anonymous',
         trim: true
     },
     approved: {
@@ -54,14 +52,6 @@ const resourceSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-});
-
-// Ensure either filePath or externalLink is provided
-resourceSchema.pre('save', function(next) {
-    if (!this.filePath && !this.externalLink) {
-        next(new Error('Either file path or external link must be provided'));
-    }
-    next();
 });
 
 module.exports = mongoose.model('Resource', resourceSchema); 

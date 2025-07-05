@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - JEE Vault</title>
+    <title>Admin Dashboard - JEE Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -16,11 +16,18 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        .form-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="h-full bg-gray-50 dark:bg-gray-900">
     <!-- Navigation -->
-    <nav class="bg-white dark:bg-gray-800 shadow-sm">
+    <nav class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -31,7 +38,7 @@
                     <div class="hidden md:flex md:space-x-8 md:ml-10">
                         <a href="/" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Home</a>
                         <a href="/upload.html" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Upload</a>
-                        <a href="/admin.html" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Admin</a>
+                        <a href="/admin.html" class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 px-3 py-2 text-sm font-medium">Admin</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -41,10 +48,6 @@
                     <button id="mobileMenuBtn" class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                         <i class="bi bi-list text-2xl"></i>
                     </button>
-                    <button id="logoutBtn" class="hidden text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
-                        <i class="bi bi-box-arrow-right mr-1"></i>
-                        Logout
-                    </button>
                 </div>
             </div>
             <!-- Mobile menu -->
@@ -52,113 +55,78 @@
                 <div class="px-2 pt-2 pb-3 space-y-1">
                     <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
                     <a href="/upload.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Upload</a>
-                    <a href="/admin.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Admin</a>
+                    <a href="/admin.html" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700">Admin</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Login Form -->
-    <div id="loginForm" class="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
-        <div class="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
-            <div>
-                <h2 class="text-center text-3xl font-bold text-gray-900 dark:text-white">Admin Login</h2>
-                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                    Please login to access the admin panel
-                </p>
+    <div id="loginForm" class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 form-fade-in">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Admin Login</h2>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Enter your credentials to access the admin dashboard</p>
             </div>
-            <form class="mt-8 space-y-6" onsubmit="handleLogin(event)">
-                <div class="rounded-md shadow-sm -space-y-px">
-                    <div>
-                        <label for="username" class="sr-only">Username</label>
-                        <input id="username" name="username" type="text" required 
-                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-900"
-                            placeholder="Username">
-                    </div>
-                    <div>
-                        <label for="password" class="sr-only">Password</label>
-                        <input id="password" name="password" type="password" required 
-                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-900"
-                            placeholder="Password">
-                    </div>
-                </div>
 
+            <form class="space-y-6">
                 <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+                    <input type="text" id="username" name="username" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                    <input type="password" id="password" name="password" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                </div>
+                <div>
+                    <button type="submit"
+                        class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300">
                         <i class="bi bi-shield-lock mr-2"></i>
-                        Sign in
+                        Login
                     </button>
                 </div>
             </form>
+            <div id="statusMessage" class="hidden mt-4 p-4 rounded-lg"></div>
         </div>
     </div>
 
-    <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="hidden min-h-[calc(100vh-4rem)] p-4">
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="hidden min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8">
         <div class="max-w-7xl mx-auto">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                            <i class="bi bi-shield-lock mr-2"></i>
-                            Resource Management
-                        </h2>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 form-fade-in">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h2>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Manage educational resources</p>
                     </div>
+                    <div class="mt-4 md:mt-0">
+                        <button onclick="localStorage.removeItem('adminCredentials'); location.reload();"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300">
+                            <i class="bi bi-box-arrow-right mr-2"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
 
-                    <!-- Resources Section -->
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                        <div class="lg:text-center mb-12">
-                            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-                                Resource Management
-                            </h2>
-                        </div>
+                <!-- Tabs -->
+                <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+                    <div class="flex space-x-8">
+                        <button id="pendingTab" class="py-4 px-1 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 font-medium text-sm">
+                            Pending Resources
+                        </button>
+                        <button id="approvedTab" class="py-4 px-1 text-gray-500 dark:text-gray-400 font-medium text-sm">
+                            Approved Resources
+                        </button>
+                    </div>
+                </div>
 
-                        <!-- Filters -->
-                        <div class="mb-6 flex flex-wrap gap-4">
-                            <input type="text" id="searchInput" 
-                                class="flex-1 border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" 
-                                placeholder="Search resources...">
-                            
-                            <select id="subjectFilter" 
-                                class="border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-                                <option value="">All Subjects</option>
-                                <option value="Physics">Physics</option>
-                                <option value="Chemistry">Chemistry</option>
-                                <option value="Math">Math</option>
-                            </select>
-
-                            <select id="tagFilter" 
-                                class="border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-                                <option value="">All Types</option>
-                                <option value="notes">Notes</option>
-                                <option value="books">Books</option>
-                            </select>
-
-                            <select id="statusFilter" 
-                                class="border border-gray-300 dark:border-gray-600 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-                                <option value="">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                            </select>
-                        </div>
-
-                        <!-- Resources Table -->
-                        <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-900">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subject</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resourcesTable" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <!-- Resources will be loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- Resources Grid -->
+                <div id="resourcesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Resources will be loaded here -->
+                    <div class="col-span-full flex items-center justify-center p-12">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                     </div>
                 </div>
             </div>
@@ -166,249 +134,72 @@
     </div>
 
     <!-- Edit Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Edit Resource</h3>
-                <form id="editForm" class="space-y-4">
-                    <input type="hidden" id="editResourceId">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                        <input type="text" id="editTitle" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
-                        <select id="editSubject" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900">
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Math">Math</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Chapter</label>
-                        <input type="text" id="editChapter" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900">
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Edit Resource</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
             </div>
+            
+            <form id="editForm" class="space-y-6">
+                <input type="hidden" id="editId">
+                
+                <div>
+                    <label for="editTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
+                    <input type="text" id="editTitle" name="editTitle" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                </div>
+                
+                <div>
+                    <label for="editDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                    <textarea id="editDescription" name="editDescription" rows="3" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"></textarea>
+                </div>
+                
+                <div>
+                    <label for="editSubject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
+                    <select id="editSubject" name="editSubject" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        <option value="">Select a subject</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Math">Math</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="editTag" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resource Type</label>
+                    <select id="editTag" name="editTag" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        <option value="">Select type</option>
+                        <option value="notes">Notes</option>
+                        <option value="books">Books</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="editUploadedBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Uploaded By</label>
+                    <input type="text" id="editUploadedBy" name="editUploadedBy" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                </div>
+                
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelEdit" onclick="closeEditModal()"
+                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script src="/js/theme.js"></script>
-    <script>
-        // Mobile Menu Toggle
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-
-        // Check authentication status
-        function checkAuth() {
-            const isLoggedIn = localStorage.getItem('adminToken');
-            document.getElementById('loginForm').classList.toggle('hidden', isLoggedIn);
-            document.getElementById('adminDashboard').classList.toggle('hidden', !isLoggedIn);
-            logoutBtn.classList.toggle('hidden', !isLoggedIn);
-            
-            if (isLoggedIn) {
-                loadResources();
-            }
-        }
-
-        // Handle login
-        async function handleLogin(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                console.log('Attempting login with:', { username });
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                console.log('Login response status:', response.status);
-                const data = await response.json();
-                console.log('Login response data:', data);
-
-                if (data.success) {
-                    const token = btoa(`${username}:${password}`);
-                    localStorage.setItem('adminToken', token);
-                    checkAuth();
-                } else {
-                    alert('Invalid credentials');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed');
-            }
-        }
-
-        // Handle logout
-        function handleLogout() {
-            localStorage.removeItem('adminToken');
-            checkAuth();
-        }
-
-        // Load resources
-        async function loadResources() {
-            try {
-                const token = localStorage.getItem('adminToken');
-                const response = await fetch('/api/admin/resources', {
-                    headers: {
-                        'Authorization': `Basic ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch resources');
-                }
-
-                const resources = await response.json();
-                renderResources(resources);
-            } catch (error) {
-                console.error('Error loading resources:', error);
-                if (error.message === 'Unauthorized') {
-                    handleLogout();
-                }
-            }
-        }
-
-        // Render resources
-        function renderResources(resources) {
-            const table = document.getElementById('resourcesTable');
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const subjectFilter = document.getElementById('subjectFilter').value;
-            const tagFilter = document.getElementById('tagFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-
-            const filteredResources = resources.filter(resource => {
-                const matchesSearch = 
-                    resource.title.toLowerCase().includes(searchTerm) ||
-                    resource.description.toLowerCase().includes(searchTerm);
-                const matchesSubject = !subjectFilter || resource.subject === subjectFilter;
-                const matchesTag = !tagFilter || resource.tag === tagFilter;
-                const matchesStatus = !statusFilter || 
-                    (statusFilter === 'approved' && resource.approved) ||
-                    (statusFilter === 'pending' && !resource.approved);
-                
-                return matchesSearch && matchesSubject && matchesTag && matchesStatus;
-            });
-
-            table.innerHTML = filteredResources.map(resource => `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900 dark:text-white">${resource.title}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">${resource.description}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
-                            ${resource.subject}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
-                            ${resource.tag}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-medium ${
-                            resource.approved 
-                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
-                                : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                        } rounded-full">
-                            ${resource.approved ? 'Approved' : 'Pending'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <a href="${resource.type === 'file' ? resource.fileUrl : resource.url}" target="_blank" 
-                           class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
-                            View
-                        </a>
-                        ${!resource.approved ? `
-                            <button onclick="approveResource('${resource._id}')"
-                                    class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300">
-                                Approve
-                            </button>
-                        ` : ''}
-                        <button onclick="deleteResource('${resource._id}')"
-                                class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // Approve resource
-        async function approveResource(id) {
-            try {
-                const token = localStorage.getItem('adminToken');
-                const response = await fetch(`/admin/resources/${id}/approve`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Basic ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to approve resource');
-                }
-
-                loadResources();
-            } catch (error) {
-                console.error('Error approving resource:', error);
-                alert('Failed to approve resource');
-            }
-        }
-
-        // Delete resource
-        async function deleteResource(id) {
-            if (!confirm('Are you sure you want to delete this resource?')) {
-                return;
-            }
-
-            try {
-                const token = localStorage.getItem('adminToken');
-                const response = await fetch(`/admin/resources/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Basic ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to delete resource');
-                }
-
-                loadResources();
-            } catch (error) {
-                console.error('Error deleting resource:', error);
-                alert('Failed to delete resource');
-            }
-        }
-
-        // Event Listeners
-        document.getElementById('searchInput').addEventListener('input', () => loadResources());
-        document.getElementById('subjectFilter').addEventListener('change', () => loadResources());
-        document.getElementById('tagFilter').addEventListener('change', () => loadResources());
-        document.getElementById('statusFilter').addEventListener('change', () => loadResources());
-
-        // Check auth on page load
-        checkAuth();
-    </script>
+    <script src="/js/admin.js"></script>
 </body>
 </html> 

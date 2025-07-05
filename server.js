@@ -2,14 +2,20 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const { upload, cloudinary } = require('./utils/cloudinary');
+const { upload } = require('./utils/uploadHandler');
 const Resource = require('./models/Resource');
 const fs = require('fs');
 const moment = require('moment');
+const chalk = require('chalk');
+const { validateConfig, config } = require('./utils/config');
 
-// Debug environment variables
-console.log('Admin username from env:', process.env.ADMIN_USERNAME);
-console.log('Admin password from env:', process.env.ADMIN_PASSWORD ? '[SET]' : '[NOT SET]');
+// Validate environment variables before starting
+try {
+    validateConfig();
+} catch (error) {
+    console.error(chalk.red('\n❌ Server startup failed: ') + error.message);
+    process.exit(1);
+}
 
 const app = express();
 
@@ -20,49 +26,44 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+console.log(chalk.blue('\n📦 Connecting to MongoDB...\n'));
+mongoose.connect(config.mongodbUri)
+    .then(() => console.log(chalk.green('✅ Connected to MongoDB\n')))
+    .catch(err => {
+        console.error(chalk.red('❌ MongoDB connection error:'), err);
+        process.exit(1);
+    });
 
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ error: 'No authorization header' });
-  }
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ error: 'No authorization header' });
+    }
 
-  const token = authHeader.split(' ')[1];
-  const [username, password] = Buffer.from(token, 'base64').toString().split(':');
+    const token = authHeader.split(' ')[1];
+    const [username, password] = Buffer.from(token, 'base64').toString().split(':');
 
-  console.log('Auth attempt:', { username, hasPassword: !!password });
-  console.log('Expected:', { 
-    username: process.env.ADMIN_USERNAME, 
-    hasPassword: !!process.env.ADMIN_PASSWORD 
-  });
-
-  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
-  }
+    if (username === config.admin.username && password === config.admin.password) {
+        next();
+    } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+    }
 };
 
 // Admin login route
 app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  console.log('Login attempt:', { username, hasPassword: !!password });
-  console.log('Expected:', { 
-    username: process.env.ADMIN_USERNAME, 
-    hasPassword: !!process.env.ADMIN_PASSWORD 
-  });
+    const { username, password } = req.body;
 
-  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ success: false, error: 'Invalid credentials' });
-  }
+    if (username === config.admin.username && password === config.admin.password) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
 });
 
 // URL validation helper
@@ -88,26 +89,22 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Function to upload file to Cloudinary
-async function uploadToCloudinary(filePath) {
-    try {
-        const result = await cloudinary.uploader.upload(filePath, {
-            resource_type: 'raw',
-            folder: 'jee_vault_uploads'
-        });
-        return result;
-    } catch (error) {
-        console.error('Cloudinary upload error:', error);
-        throw new Error('Failed to upload file to cloud storage');
-    }
-}
-
 // API Routes
 app.post('/api/resources', upload.single('file'), async (req, res) => {
+    console.log(chalk.blue('📝 Resource upload request received'));
+    console.log(chalk.gray(`Body: ${JSON.stringify(req.body)}`));
+    console.log(chalk.gray(`File: ${req.file ? JSON.stringify({
+        filename: req.file.filename,
+        path: req.file.path,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+    }) : 'No file'}`));
+    
     try {
-        const { title, description, type, subject, tag } = req.body;
+        const { title, description, type, subject, tag, url, uploadedBy } = req.body;
 
         if (!title || !description || !subject || !tag) {
+            console.log(chalk.yellow('⚠️ Missing required fields'));
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -116,40 +113,48 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
             description,
             subject,
             type: type || 'file',
-            tag
+            tag,
+            uploadedBy: uploadedBy || 'Anonymous',
+            approved: false // Always start as unapproved
         });
 
         if (type === 'file' || !type) {
             if (!req.file) {
+                console.log(chalk.yellow('⚠️ No file uploaded'));
                 return res.status(400).json({ error: 'No file uploaded' });
             }
 
-            // Upload file to Cloudinary
-            const result = await uploadToCloudinary(req.file.path);
-            resource.fileUrl = result.secure_url;
-            resource.cloudinaryPublicId = result.public_id;
-
-            // Clean up the temporary file
-            fs.unlinkSync(req.file.path);
+            // Store file path in the database
+            resource.fileUrl = `/uploads/${req.file.filename}`;
+            console.log(chalk.green(`✅ File saved: ${resource.fileUrl}`));
+            
         } else if (type === 'url') {
-            if (!req.body.url) {
+            if (!url) {
+                console.log(chalk.yellow('⚠️ No URL provided'));
                 return res.status(400).json({ error: 'No URL provided' });
             }
-            resource.url = req.body.url;
+            resource.url = url;
+            console.log(chalk.green(`✅ URL added: ${url}`));
         }
 
         await resource.save();
-        res.status(201).json(resource);
+        console.log(chalk.green(`✅ Resource saved to database: ${resource._id}`));
+        res.status(201).json({ 
+            success: true, 
+            message: 'Resource submitted successfully! It will be available after admin approval.',
+            resource
+        });
     } catch (error) {
-        console.error('Error creating resource:', error);
+        console.error(chalk.red(`❌ Error creating resource: ${error.message}`));
+        console.error(chalk.red(error.stack));
         res.status(500).json({ error: error.message || 'Failed to create resource' });
     }
 });
 
-// Get approved resources
+// Get approved resources only
 app.get('/api/resources', async (req, res) => {
   try {
-    const resources = await Resource.find()
+    const resources = await Resource.find({ approved: true })
       .sort('-createdAt');
     
     const formattedResources = resources.map(resource => ({
@@ -193,6 +198,39 @@ app.patch('/admin/resources/:id/approve', authenticateAdmin, async (req, res) =>
   }
 });
 
+// New endpoint for editing resources
+app.put('/admin/resources/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const { title, description, subject, tag, uploadedBy } = req.body;
+    
+    if (!title || !description || !subject || !tag) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const resource = await Resource.findByIdAndUpdate(
+      req.params.id,
+      { 
+        title, 
+        description, 
+        subject, 
+        tag,
+        uploadedBy: uploadedBy || 'Anonymous'
+      },
+      { new: true, runValidators: true }
+    );
+    
+    if (!resource) {
+      return res.status(404).json({ error: 'Resource not found' });
+    }
+    
+    console.log(chalk.green(`✅ Resource updated: ${resource._id}`));
+    res.json(resource);
+  } catch (error) {
+    console.error(chalk.red(`❌ Error updating resource: ${error.message}`));
+    res.status(500).json({ error: error.message || 'Failed to update resource' });
+  }
+});
+
 app.delete('/admin/resources/:id', authenticateAdmin, async (req, res) => {
   try {
     const resource = await Resource.findById(req.params.id);
@@ -200,27 +238,29 @@ app.delete('/admin/resources/:id', authenticateAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Resource not found' });
     }
 
-    // If it's a file type resource, delete from Cloudinary
-    if (resource.type === 'file' && resource.fileURL) {
-      // Extract public_id from Cloudinary URL
-      const publicId = resource.fileURL.split('/').pop().split('.')[0];
-      await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+    // If it's a file type resource, delete the file
+    if (resource.type === 'file' && resource.fileUrl) {
+      const filePath = path.join(__dirname, resource.fileUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(chalk.green(`✅ File deleted: ${filePath}`));
+      }
     }
 
     await Resource.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (error) {
-    console.error('Delete error:', error);
+    console.error(chalk.red(`❌ Delete error: ${error.message}`));
     res.status(500).json({ error: 'Failed to delete resource' });
   }
 });
 
 // Handle 404 - Keep this as the last route
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Start server
+app.listen(config.port, () => {
+    console.log(chalk.green(`\n🚀 Server is running on port ${config.port}\n`));
 }); 
