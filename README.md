@@ -1,73 +1,57 @@
 # JEE Vault
 
-A platform for sharing educational resources for JEE preparation.
+A platform for sharing and accessing JEE preparation resources.
 
 ## Features
 
-- Upload and share PDF resources for JEE preparation
-- Browse resources by subject and type
-- Admin approval workflow for quality control
-- Clean, responsive UI with dark mode support
-- Local PDF storage
+- Browse and search for JEE preparation materials
+- Upload PDF resources or share external links
+- Admin approval system for quality control
+- Filter resources by subject and tags
+- Dark mode support
+- Mobile responsive design
 
-## Tech Stack
-
-- **Frontend**: HTML, CSS (TailwindCSS), Vanilla JavaScript
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB
-- **Storage**: Local file storage for PDFs
-- **Authentication**: Basic auth for admin panel
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v14+)
-- MongoDB database
-
-### Installation
+## Setup
 
 1. Clone the repository
-   ```
-   git clone https://github.com/adii-the-billionaire/JEE-Vault.git
-   cd JEE-Vault
-   ```
-
-2. Install dependencies
+2. Install dependencies:
    ```
    npm install
    ```
-
-3. Create a `.env` file based on `.env.example`
+3. Create a `.env` file in the root directory with the following variables:
    ```
-   cp .env.example .env
+   # MongoDB Connection
+   MONGODB_URI=mongodb+srv://your-username:your-password@your-cluster.mongodb.net/jeevault
+
+   # Admin Credentials
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=securepassword
+
+   # Cloudinary Configuration (Required for production file uploads)
+   CLOUDINARY_CLOUD_NAME=your-cloud-name
+   CLOUDINARY_API_KEY=your-api-key
+   CLOUDINARY_API_SECRET=your-api-secret
    ```
-
-4. Update the `.env` file with your MongoDB URI and admin credentials
-
-5. Start the development server
+4. Start the development server:
    ```
    npm run dev
    ```
 
-6. Open your browser and navigate to `http://localhost:3000`
+## Cloudinary Setup (Required for Production)
 
-## Project Structure
+To enable file uploads in production:
 
-- `public/` - Static assets and frontend files
-  - `js/` - JavaScript files
-  - `index.html` - Homepage
-  - `upload.html` - Upload form
-  - `admin.html` - Admin dashboard
-- `models/` - MongoDB models
-- `utils/` - Utility functions
-- `uploads/` - Uploaded PDF files
-- `server.js` - Express server
+1. Create a free Cloudinary account at https://cloudinary.com/
+2. Get your cloud name, API key, and API secret from your dashboard
+3. Add these values to your environment variables:
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+4. For Vercel deployment, add these as environment variables in your Vercel project settings
 
-## Admin Access
+## Deployment
 
-1. Navigate to `/admin.html`
-2. Login with credentials from your `.env` file
+This project is configured for deployment on Vercel. Simply connect your GitHub repository to Vercel and deploy.
 
 ## License
 

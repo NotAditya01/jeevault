@@ -8,6 +8,7 @@ const fs = require('fs');
 const moment = require('moment');
 const chalk = require('chalk');
 const { validateConfig, config } = require('./utils/config');
+const { uploadPdfToCloudinary, isCloudinaryConfigured } = require('./utils/cloudinary');
 
 // Validate environment variables before starting
 try {
@@ -16,6 +17,9 @@ try {
     console.error(chalk.red('\n❌ Server startup failed: ') + error.message);
     process.exit(1);
 }
+
+// Check if Cloudinary is configured
+const cloudinaryEnabled = isCloudinaryConfigured();
 
 const app = express();
 
@@ -146,25 +150,45 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
             }
 
             // Check if we're in production (Vercel)
-            if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-                console.log(chalk.yellow('⚠️ File uploads not supported in production environment'));
-                return res.status(400).json({ 
-                    error: 'File uploads are not supported in the production environment. Please use URL resources instead.',
-                    production: true
-                });
-            }
-
-            // Ensure uploads directory exists
-            const uploadsDir = path.join(__dirname, 'uploads');
-            if (!fs.existsSync(uploadsDir)) {
-                console.log(chalk.blue('📁 Creating uploads directory'));
-                fs.mkdirSync(uploadsDir, { recursive: true });
-            }
-
-            // Store file path in the database
-            resource.fileUrl = `/uploads/${req.file.filename}`;
-            console.log(chalk.green(`✅ File saved: ${resource.fileUrl}`));
+            const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
             
+            if (isProduction) {
+                // In production, use Cloudinary if configured
+                if (!cloudinaryEnabled) {
+                    console.log(chalk.yellow('⚠️ Cloudinary not configured in production environment'));
+                    return res.status(400).json({ 
+                        error: 'File uploads are not supported in the production environment. Please use URL resources instead.',
+                        production: true
+                    });
+                }
+                
+                try {
+                    // Upload to Cloudinary
+                    const cloudinaryResult = await uploadPdfToCloudinary(
+                        req.file.buffer, 
+                        req.file.originalname
+                    );
+                    
+                    // Store Cloudinary URL in the database
+                    resource.fileUrl = cloudinaryResult.secure_url;
+                    console.log(chalk.green(`✅ File uploaded to Cloudinary: ${resource.fileUrl}`));
+                } catch (cloudinaryError) {
+                    console.error(chalk.red(`❌ Cloudinary upload error: ${cloudinaryError.message}`));
+                    return res.status(500).json({ error: 'Failed to upload file to cloud storage' });
+                }
+            } else {
+                // In development, use local file storage
+                // Ensure uploads directory exists
+                const uploadsDir = path.join(__dirname, 'uploads');
+                if (!fs.existsSync(uploadsDir)) {
+                    console.log(chalk.blue('📁 Creating uploads directory'));
+                    fs.mkdirSync(uploadsDir, { recursive: true });
+                }
+
+                // Store file path in the database
+                resource.fileUrl = `/uploads/${req.file.filename}`;
+                console.log(chalk.green(`✅ File saved locally: ${resource.fileUrl}`));
+            }
         } else if (type === 'url') {
             if (!url) {
                 console.log(chalk.yellow('⚠️ No URL provided'));

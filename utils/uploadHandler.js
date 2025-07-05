@@ -34,16 +34,21 @@ try {
   console.error(chalk.red(`This may cause file uploads to fail`));
 }
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Check if we're in production (Vercel)
-    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-      // In production, we'll use memory storage and handle differently
-      console.log(chalk.yellow('⚠️ Production environment detected, using memory storage'));
-      // Still need to call callback with a path, but we'll handle the file differently later
-      cb(null, uploadDir);
-    } else {
+// Determine if we're in production
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
+
+// Configure storage based on environment
+let storage;
+
+if (isProduction) {
+  console.log(chalk.blue('📊 Using memory storage for production environment'));
+  // In production, use memory storage for Cloudinary upload
+  storage = multer.memoryStorage();
+} else {
+  console.log(chalk.blue('📊 Using disk storage for development environment'));
+  // In development, use disk storage
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
       // Double-check directory exists before trying to save
       if (!fs.existsSync(uploadDir)) {
         try {
@@ -54,15 +59,15 @@ const storage = multer.diskStorage({
         }
       }
       cb(null, uploadDir);
-    }
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileName = uniqueName + path.extname(file.originalname);
-    console.log(chalk.blue(`📄 Generating filename for upload: ${fileName}`));
-    cb(null, fileName);
-  },
-});
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      const fileName = uniqueName + path.extname(file.originalname);
+      console.log(chalk.blue(`📄 Generating filename for upload: ${fileName}`));
+      cb(null, fileName);
+    },
+  });
+}
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype === "application/pdf") {
