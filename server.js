@@ -145,6 +145,13 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
 
+            // Ensure uploads directory exists
+            const uploadsDir = path.join(__dirname, 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+                console.log(chalk.blue('📁 Creating uploads directory'));
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+
             // Store file path in the database
             resource.fileUrl = `/uploads/${req.file.filename}`;
             console.log(chalk.green(`✅ File saved: ${resource.fileUrl}`));
@@ -154,6 +161,12 @@ app.post('/api/resources', upload.single('file'), async (req, res) => {
                 console.log(chalk.yellow('⚠️ No URL provided'));
                 return res.status(400).json({ error: 'No URL provided' });
             }
+            
+            if (!isValidUrl(url)) {
+                console.log(chalk.yellow(`⚠️ Invalid URL: ${url}`));
+                return res.status(400).json({ error: 'Invalid URL format' });
+            }
+            
             resource.url = url;
             console.log(chalk.green(`✅ URL added: ${url}`));
         }

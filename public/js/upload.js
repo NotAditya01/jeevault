@@ -99,6 +99,13 @@ document.addEventListener('DOMContentLoaded', function() {
         progressBar.style.width = '0%';
         progressPercent.textContent = '0%';
         
+        // Disable form during upload
+        const submitButton = uploadForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="bi bi-arrow-repeat spin mr-2"></i> Uploading...';
+        }
+        
         // Simulate progress (since fetch doesn't support progress monitoring for uploads)
         let progress = 0;
         const progressInterval = setInterval(() => {
@@ -118,15 +125,36 @@ document.addEventListener('DOMContentLoaded', function() {
             clearInterval(progressInterval);
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Upload failed');
+                let errorMessage = 'Upload failed';
+                try {
+                    // Try to parse error response as JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } else {
+                        errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing error response:', parseError);
+                    errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
             }
 
+            // Check content type to ensure it's JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response');
+            }
+            
+            const result = await response.json();
+            
             // Complete progress
             updateProgress(100);
             
             // Show success message
-            showMessage('Resource uploaded successfully! It will be available after admin approval.', 'success');
+            showMessage(result.message || 'Resource uploaded successfully! It will be available after admin approval.', 'success');
             
             // Reset form after a delay
             setTimeout(() => {
@@ -134,6 +162,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadProgress.classList.add('hidden');
                 selectedFileName.textContent = '';
                 selectedFileName.classList.add('hidden');
+                
+                // Re-enable submit button
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Submit Resource';
+                }
             }, 3000);
             
         } catch (error) {
@@ -142,6 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadProgress.classList.add('hidden');
             console.error('Error:', error);
             showMessage('Failed to upload resource: ' + error.message, 'error');
+            
+            // Re-enable submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Submit Resource';
+            }
         }
     });
     
@@ -165,6 +205,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Show message helper
 function showMessage(text, type) {
     const messageDiv = document.getElementById('message');
+    if (!messageDiv) return;
+    
     messageDiv.textContent = text;
     messageDiv.className = `rounded-lg p-4 ${type === 'success' ? 'bg-green-800' : 'bg-red-800'} text-white`;
     messageDiv.style.display = 'block';
@@ -174,7 +216,7 @@ function showMessage(text, type) {
 }
 
 // File input validation
-document.getElementById('file').addEventListener('change', (e) => {
+document.getElementById('file')?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file && file.type !== 'application/pdf') {
         showMessage('Please upload only PDF files', 'error');
@@ -183,14 +225,18 @@ document.getElementById('file').addEventListener('change', (e) => {
 });
 
 // Clear other input when one is filled
-document.getElementById('file').addEventListener('change', () => {
-    if (document.getElementById('file').files[0]) {
-        document.getElementById('link').value = '';
+document.getElementById('file')?.addEventListener('change', () => {
+    const fileInput = document.getElementById('file');
+    const linkInput = document.getElementById('link');
+    if (fileInput && linkInput && fileInput.files[0]) {
+        linkInput.value = '';
     }
 });
 
-document.getElementById('link').addEventListener('input', () => {
-    if (document.getElementById('link').value) {
-        document.getElementById('file').value = '';
+document.getElementById('link')?.addEventListener('input', () => {
+    const fileInput = document.getElementById('file');
+    const linkInput = document.getElementById('link');
+    if (fileInput && linkInput && linkInput.value) {
+        fileInput.value = '';
     }
 }); 

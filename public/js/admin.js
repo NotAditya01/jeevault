@@ -56,6 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username, password })
             });
             
+            // Check if response is ok before trying to parse JSON
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            
+            // Check content type to ensure it's JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response');
+            }
+            
             const result = await response.json();
             
             if (result.success) {
@@ -156,6 +167,16 @@ async function fetchResources() {
             return;
         }
         
+        // Check if response is ok and content type is JSON before parsing
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+        
         allResources = await response.json();
         filterResources();
     } catch (error) {
@@ -204,8 +225,8 @@ function renderResources(resources) {
                         <span class="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
                             ${resource.subject}
                         </span>
-                        <span class="px-2 py-1 text-xs font-medium ${resource.approved ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'} rounded-full">
-                            ${resource.approved ? 'Approved' : 'Pending'}
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
+                            ${resource.tag}
                         </span>
                     </div>
                     <span class="text-sm text-gray-500 dark:text-gray-400">
@@ -216,73 +237,77 @@ function renderResources(resources) {
                 <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
                     ${resource.description}
                 </p>
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
+                    <div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            Shared by: ${resource.uploadedBy || 'Anonymous'}
+                        </span>
+                    </div>
                     <div class="flex gap-2">
-                        ${!resource.approved ? `
-                            <button onclick="approveResource('${resource._id}')"
-                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                <i class="bi bi-check-circle mr-2"></i> Approve
+                        ${currentFilter === 'pending' ? `
+                            <button onclick="approveResource('${resource._id}')" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                <i class="bi bi-check-lg mr-2"></i> Approve
                             </button>
                         ` : ''}
-                        <button onclick="editResource('${resource._id}')"
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <button onclick="editResource('${resource._id}')" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="bi bi-pencil mr-2"></i> Edit
                         </button>
-                        <button onclick="deleteResource('${resource._id}')"
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <button onclick="deleteResource('${resource._id}')" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <i class="bi bi-trash mr-2"></i> Delete
                         </button>
                     </div>
-                    <a href="${resource.type === 'file' ? resource.fileUrl : resource.url}" target="_blank" 
-                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                        <i class="bi bi-${resource.type === 'file' ? 'download' : 'link-45deg'} mr-2"></i> 
-                        ${resource.type === 'file' ? 'Download' : 'View'}
-                    </a>
                 </div>
             </div>
         </div>
     `).join('');
 }
 
-// Resource actions
+// Approve resource
 async function approveResource(id) {
     try {
         const credentials = getCredentials();
         if (!credentials) {
             clearCredentials();
             updateUI();
-            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
         
         const response = await fetch(`/admin/resources/${id}/approve`, {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${credentials}`
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/json'
             }
         });
         
         if (response.status === 401) {
             clearCredentials();
             updateUI();
-            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
         
-        if (response.ok) {
-            await fetchResources(); // Refresh the list
-            showLoginMessage('Resource approved successfully!', 'success');
-        } else {
-            const error = await response.json();
-            showLoginMessage('Error approving resource: ' + (error.error || 'Unknown error'), 'error');
+        if (!response.ok) {
+            throw new Error(`Failed to approve resource: ${response.status}`);
         }
+        
+        // Check content type before parsing JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+        
+        await response.json(); // Just to validate the response
+        
+        // Refresh resources
+        fetchResources();
+        
     } catch (error) {
         console.error('Error approving resource:', error);
-        showLoginMessage('Error approving resource. Please try again.', 'error');
+        alert('Failed to approve resource: ' + error.message);
     }
 }
 
+// Delete resource
 async function deleteResource(id) {
     if (!confirm('Are you sure you want to delete this resource?')) {
         return;
@@ -293,14 +318,12 @@ async function deleteResource(id) {
         if (!credentials) {
             clearCredentials();
             updateUI();
-            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
         
         const response = await fetch(`/admin/resources/${id}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Basic ${credentials}`
             }
         });
@@ -308,37 +331,33 @@ async function deleteResource(id) {
         if (response.status === 401) {
             clearCredentials();
             updateUI();
-            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
         
-        if (response.ok) {
-            await fetchResources(); // Refresh the list
-            showLoginMessage('Resource deleted successfully!', 'success');
-        } else {
-            const error = await response.json();
-            showLoginMessage('Error deleting resource: ' + (error.error || 'Unknown error'), 'error');
+        if (!response.ok) {
+            throw new Error(`Failed to delete resource: ${response.status}`);
         }
+        
+        // Refresh resources
+        fetchResources();
+        
     } catch (error) {
         console.error('Error deleting resource:', error);
-        showLoginMessage('Error deleting resource. Please try again.', 'error');
+        alert('Failed to delete resource: ' + error.message);
     }
 }
 
-// Edit resource functionality
+// Current resource being edited
 let currentEditId = null;
 
+// Edit resource
 function editResource(id) {
-    currentEditId = id;
     const resource = allResources.find(r => r._id === id);
+    if (!resource) return;
     
-    if (!resource) {
-        showLoginMessage('Resource not found', 'error');
-        return;
-    }
+    currentEditId = id;
     
-    // Populate form fields
-    document.getElementById('editId').value = resource._id;
+    // Populate form
     document.getElementById('editTitle').value = resource.title;
     document.getElementById('editDescription').value = resource.description;
     document.getElementById('editSubject').value = resource.subject;
@@ -346,84 +365,80 @@ function editResource(id) {
     document.getElementById('editUploadedBy').value = resource.uploadedBy || '';
     
     // Show modal
-    document.getElementById('editModal').style.display = 'flex';
+    document.getElementById('editModal').classList.remove('hidden');
 }
 
+// Close edit modal
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('editModal').classList.add('hidden');
     currentEditId = null;
 }
 
+// Handle edit form submission
 async function handleEditFormSubmit(e) {
     e.preventDefault();
     
-    if (!currentEditId) {
-        showLoginMessage('No resource selected for editing', 'error');
-        return;
-    }
-    
-    const title = document.getElementById('editTitle').value;
-    const description = document.getElementById('editDescription').value;
-    const subject = document.getElementById('editSubject').value;
-    const tag = document.getElementById('editTag').value;
-    const uploadedBy = document.getElementById('editUploadedBy').value;
-    
-    if (!title || !description || !subject || !tag) {
-        showLoginMessage('Please fill in all required fields', 'error');
-        return;
-    }
+    if (!currentEditId) return;
     
     try {
         const credentials = getCredentials();
         if (!credentials) {
             clearCredentials();
             updateUI();
-            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
+        
+        const formData = {
+            title: document.getElementById('editTitle').value,
+            description: document.getElementById('editDescription').value,
+            subject: document.getElementById('editSubject').value,
+            tag: document.getElementById('editTag').value,
+            uploadedBy: document.getElementById('editUploadedBy').value || 'Anonymous'
+        };
         
         const response = await fetch(`/admin/resources/${currentEditId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${credentials}`
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                title,
-                description,
-                subject,
-                tag,
-                uploadedBy: uploadedBy || 'Anonymous'
-            })
+            body: JSON.stringify(formData)
         });
         
         if (response.status === 401) {
             clearCredentials();
             updateUI();
-            showLoginMessage('Session expired. Please log in again.', 'error');
             return;
         }
         
-        if (response.ok) {
-            closeEditModal();
-            await fetchResources(); // Refresh the list
-            showLoginMessage('Resource updated successfully!', 'success');
-        } else {
-            const error = await response.json();
-            showLoginMessage('Error updating resource: ' + (error.error || 'Unknown error'), 'error');
+        if (!response.ok) {
+            throw new Error(`Failed to update resource: ${response.status}`);
         }
+        
+        // Check content type before parsing JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+        
+        await response.json(); // Just to validate the response
+        
+        // Close modal and refresh
+        closeEditModal();
+        fetchResources();
+        
     } catch (error) {
         console.error('Error updating resource:', error);
-        showLoginMessage('Error updating resource. Please try again.', 'error');
+        alert('Failed to update resource: ' + error.message);
     }
 }
 
-// Show login message helper
+// Show login message
 function showLoginMessage(text, type) {
-    const messageDiv = document.getElementById('statusMessage');
-    if (messageDiv) {
-        messageDiv.textContent = text;
-        messageDiv.className = `mt-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`;
-        messageDiv.style.display = 'block';
+    const messageEl = document.getElementById('loginMessage');
+    if (messageEl) {
+        messageEl.textContent = text;
+        messageEl.className = `mt-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+        messageEl.classList.remove('hidden');
     }
 } 

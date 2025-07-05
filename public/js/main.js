@@ -15,6 +15,12 @@ async function fetchResources() {
             throw new Error(`Failed to fetch resources: ${response.status} ${response.statusText}`);
         }
         
+        // Check content type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+        
         resources = await response.json();
         
         if (resources.length === 0) {
@@ -190,6 +196,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize
     fetchResources();
+    
+    // Retry button for failed resource loading
+    const retryButton = document.querySelector('#noResources button');
+    if (retryButton) {
+        retryButton.addEventListener('click', () => {
+            fetchResources();
+        });
+    }
     
     // Mobile menu toggle
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
