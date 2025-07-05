@@ -23,6 +23,18 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function(body) {
+    if (body && typeof body === 'string' && body.includes('</head>')) {
+      body = body.replace('</head>', '<script defer src="/_vercel/insights/script.js"></script></head>');
+    }
+    originalSend.call(this, body);
+  };
+  next();
+});
+
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -30,7 +42,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static('uploads'));
 
 // Connect to MongoDB
-console.log(chalk.blue('\n📦 Connecting to MongoDB...\n'));
+console.log(chalk.blue('\n Connecting to MongoDB...\n'));
 mongoose.connect(config.mongodbUri)
     .then(() => console.log(chalk.green('✅ Connected to MongoDB\n')))
     .catch(err => {
