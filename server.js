@@ -34,13 +34,9 @@ app.use((req, res, next) => {
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect to MongoDB with improved connection options
-console.log(chalk.blue('\n Connecting to MongoDB...\n'));
-
 // Add connection parameters directly to the URI if not already present
 let mongoUri = config.mongodbUri;
 if (!mongoUri.includes('?')) {
-    // Add recommended options for Vercel deployment
     mongoUri += '?retryWrites=true&w=majority';
 }
 
@@ -49,14 +45,10 @@ let cachedConnection = null;
 
 async function connectToDatabase() {
     if (cachedConnection) {
-        console.log(chalk.blue('Using cached database connection'));
         return cachedConnection;
     }
 
     try {
-        // Set mongoose options for better serverless performance
-        mongoose.set('bufferCommands', false);
-        
         // Connect with updated options
         const connection = await mongoose.connect(mongoUri, getMongoDbOptions());
         console.log(chalk.green('✅ Connected to MongoDB\n'));
@@ -69,31 +61,42 @@ async function connectToDatabase() {
     }
 }
 
-// Connect to MongoDB at startup
-connectToDatabase().catch(err => {
-    console.error(chalk.red('Failed to connect to MongoDB:'), err);
-    process.exit(1);
-});
+// Initialize database connection before starting the server
+async function initializeServer() {
+    try {
+        // Connect to MongoDB first
+        await connectToDatabase();
+        
+        // Add connection event listeners for better error handling
+        mongoose.connection.on('error', (err) => {
+            console.error(chalk.red(`MongoDB connection error: ${err}`));
+            // Attempt to reconnect
+            setTimeout(() => {
+                connectToDatabase().catch(console.error);
+            }, 5000);
+        });
 
-// Add connection event listeners for better error handling
-mongoose.connection.on('error', (err) => {
-    console.error(chalk.red(`MongoDB connection error: ${err}`));
-    // Attempt to reconnect
-    setTimeout(() => {
-        connectToDatabase().catch(console.error);
-    }, 5000);
-});
+        mongoose.connection.on('disconnected', () => {
+            console.log(chalk.yellow('MongoDB disconnected. Attempting to reconnect...'));
+            setTimeout(() => {
+                connectToDatabase().catch(console.error);
+            }, 5000);
+        });
 
-mongoose.connection.on('disconnected', () => {
-    console.log(chalk.yellow('MongoDB disconnected. Attempting to reconnect...'));
-    setTimeout(() => {
-        connectToDatabase().catch(console.error);
-    }, 5000);
-});
+        mongoose.connection.on('reconnected', () => {
+            console.log(chalk.green('MongoDB reconnected'));
+        });
 
-mongoose.connection.on('reconnected', () => {
-    console.log(chalk.green('MongoDB reconnected'));
-});
+        // Start listening only after successful database connection
+        const port = process.env.PORT || 3000;
+        app.listen(port, () => {
+            console.log(chalk.green(`✅ Server is running on port ${port}`));
+        });
+    } catch (error) {
+        console.error(chalk.red('Failed to initialize server:'), error);
+        process.exit(1);
+    }
+}
 
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
@@ -110,27 +113,6 @@ const authenticateAdmin = (req, res, next) => {
     } else {
         res.status(401).json({ error: 'Invalid credentials' });
     }
-};
-
-// Admin login route
-app.post('/api/admin/login', (req, res) => {
-    const { username, password } = req.body;
-
-    if (username === config.admin.username && password === config.admin.password) {
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-});
-
-// URL validation helper
-const isValidUrl = (url) => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 };
 
 // Routes
@@ -155,15 +137,33 @@ app.get('/admin.html', (req, res) => {
   res.redirect('/admin');
 });
 
+// Admin login route
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+
+    if (username === config.admin.username && password === config.admin.password) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+});
+
+// URL validation helper
+const isValidUrl = (url) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // API Routes
 app.post('/api/resources', async (req, res) => {
     console.log(chalk.blue('📝 Resource submission request received'));
     console.log(chalk.gray(`Body: ${JSON.stringify(req.body)}`));
     
     try {
-        // Ensure database connection
-        await connectToDatabase();
-        
         const { title, description, subject, tag, url, uploadedBy } = req.body;
 
         // Validate required fields
@@ -219,8 +219,6 @@ app.post('/api/resources', async (req, res) => {
 // Get all resources (approved only)
 app.get('/api/resources', async (req, res) => {
     try {
-        await connectToDatabase();
-        
         const resources = await Resource.find({ approved: true })
             .sort({ createdAt: -1 })
             .maxTimeMS(10000); // Set maximum execution time
@@ -234,8 +232,6 @@ app.get('/api/resources', async (req, res) => {
 // Admin routes
 app.get('/api/admin/resources', authenticateAdmin, async (req, res) => {
     try {
-        await connectToDatabase();
-        
         const { status = 'pending' } = req.query;
         const resources = await Resource.find({ 
             approved: status === 'approved'
@@ -253,67 +249,49 @@ app.get('/api/admin/resources', authenticateAdmin, async (req, res) => {
     }
 });
 
-app.put('/api/admin/resources/:id/approve', authenticateAdmin, async (req, res) => {
+// Approve/reject resource
+app.patch('/api/admin/resources/:id', authenticateAdmin, async (req, res) => {
     try {
-        const resource = await Resource.findByIdAndUpdate(
-            req.params.id,
-            { approved: true },
-            { new: true }
-        );
+        const { id } = req.params;
+        const { action } = req.body;
+        
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid action' });
+        }
+        
+        const resource = await Resource.findById(id);
         if (!resource) {
             return res.status(404).json({ error: 'Resource not found' });
         }
-        res.json(resource);
+        
+        resource.approved = action === 'approve';
+        await resource.save();
+        
+        console.log(chalk.green(`✅ Resource ${id} ${action}d`));
+        res.json({ success: true });
     } catch (error) {
-        console.error(chalk.red(`❌ Error approving resource: ${error.message}`));
-        res.status(500).json({ error: 'Failed to approve resource' });
+        console.error(chalk.red(`❌ Error updating resource: ${error.message}`));
+        res.status(500).json({ error: 'Failed to update resource' });
     }
 });
 
+// Delete resource
 app.delete('/api/admin/resources/:id', authenticateAdmin, async (req, res) => {
     try {
-        const resource = await Resource.findByIdAndDelete(req.params.id);
-        if (!resource) {
+        const { id } = req.params;
+        
+        const result = await Resource.findByIdAndDelete(id);
+        if (!result) {
             return res.status(404).json({ error: 'Resource not found' });
         }
-        res.json({ message: 'Resource deleted successfully' });
+        
+        console.log(chalk.green(`✅ Resource ${id} deleted`));
+        res.json({ success: true });
     } catch (error) {
         console.error(chalk.red(`❌ Error deleting resource: ${error.message}`));
         res.status(500).json({ error: 'Failed to delete resource' });
     }
 });
 
-// Admin: Update resource
-app.put('/api/admin/resources/:id', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { title, description, subject, tag, url, uploadedBy } = req.body;
-
-        // Validate required fields
-        if (!title || !description || !subject || !tag || !url) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
-        // Update resource
-        const updatedResource = await Resource.findByIdAndUpdate(
-            id,
-            { title, description, subject, tag, url, uploadedBy },
-            { new: true }
-        );
-
-        if (!updatedResource) {
-            return res.status(404).json({ error: 'Resource not found' });
-        }
-
-        res.json(updatedResource);
-    } catch (error) {
-        console.error('Error updating resource:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(chalk.green(`\n✅ Server is running on port ${PORT}\n`));
-}); 
+// Initialize the server
+initializeServer(); 

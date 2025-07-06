@@ -81,13 +81,12 @@ function validateConfig() {
 // Get MongoDB connection options
 function getMongoDbOptions() {
     return {
-        serverSelectionTimeoutMS: 60000, // Increase from default 30000ms
-        socketTimeoutMS: 60000, // Increase from default 30000ms
-        connectTimeoutMS: 60000, // Increase from default 30000ms
-        maxPoolSize: 10, // Reduce from default 100 for serverless
-        minPoolSize: 0,  // Allow pool to shrink to 0 during idle
-        maxIdleTimeMS: 60000, // Close idle connections after 60 seconds
-        bufferCommands: false, // Disable mongoose buffering
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 30000,
+        connectTimeoutMS: 30000,
+        maxPoolSize: 10,
+        minPoolSize: 0,
+        maxIdleTimeMS: 10000,
     };
 }
 
