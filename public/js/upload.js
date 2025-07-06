@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const uploadedBy = document.getElementById('uploadedBy').value.trim();
         const url = document.getElementById('url').value.trim();
         
-        // Basic validation
-        if (!title || !description || !subject || !tag || !uploadedBy || !url) {
+        // Basic validation - uploadedBy is now optional
+        if (!title || !description || !subject || !tag || !url) {
             showMessage('Please fill in all required fields', 'error');
             return;
         }
@@ -27,13 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Prepare form data
+        // Prepare form data - use 'Anonymous' if uploadedBy is empty
         const formData = {
             title,
             description,
             subject,
             tag,
-            uploadedBy,
+            uploadedBy: uploadedBy || 'Anonymous',
             url
         };
         

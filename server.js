@@ -66,26 +66,26 @@ async function initializeServer() {
     try {
         // Connect to MongoDB first
         await connectToDatabase();
-        
-        // Add connection event listeners for better error handling
-        mongoose.connection.on('error', (err) => {
-            console.error(chalk.red(`MongoDB connection error: ${err}`));
-            // Attempt to reconnect
-            setTimeout(() => {
-                connectToDatabase().catch(console.error);
-            }, 5000);
-        });
 
-        mongoose.connection.on('disconnected', () => {
-            console.log(chalk.yellow('MongoDB disconnected. Attempting to reconnect...'));
-            setTimeout(() => {
-                connectToDatabase().catch(console.error);
-            }, 5000);
-        });
+// Add connection event listeners for better error handling
+mongoose.connection.on('error', (err) => {
+    console.error(chalk.red(`MongoDB connection error: ${err}`));
+    // Attempt to reconnect
+    setTimeout(() => {
+        connectToDatabase().catch(console.error);
+    }, 5000);
+});
 
-        mongoose.connection.on('reconnected', () => {
-            console.log(chalk.green('MongoDB reconnected'));
-        });
+mongoose.connection.on('disconnected', () => {
+    console.log(chalk.yellow('MongoDB disconnected. Attempting to reconnect...'));
+    setTimeout(() => {
+        connectToDatabase().catch(console.error);
+    }, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+    console.log(chalk.green('MongoDB reconnected'));
+});
 
         // Start listening only after successful database connection
         const port = process.env.PORT || 3000;
@@ -112,7 +112,7 @@ const authenticateAdmin = (req, res, next) => {
         next();
     } else {
         res.status(401).json({ error: 'Invalid credentials' });
-    }
+  }
 };
 
 // Routes
@@ -253,22 +253,47 @@ app.get('/api/admin/resources', authenticateAdmin, async (req, res) => {
 app.patch('/api/admin/resources/:id', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { action } = req.body;
+        const { action, ...updateData } = req.body;
         
-        if (!['approve', 'reject'].includes(action)) {
+        if (action === 'approve' || action === 'reject') {
+            // Handle approve/reject action
+            const resource = await Resource.findById(id);
+            if (!resource) {
+                return res.status(404).json({ error: 'Resource not found' });
+            }
+            
+            resource.approved = action === 'approve';
+            await resource.save();
+            
+            console.log(chalk.green(`✅ Resource ${id} ${action}d`));
+            return res.json({ success: true });
+        } 
+        else if (action === 'update') {
+            // Handle update action
+            const { title, description, subject, tag, url, uploadedBy } = updateData;
+            
+            // Validate required fields
+            if (!title || !description || !subject || !tag || !url) {
+                return res.status(400).json({ error: 'Missing required fields' });
+            }
+            
+            // Update resource
+            const updatedResource = await Resource.findByIdAndUpdate(
+                id,
+                { title, description, subject, tag, url, uploadedBy: uploadedBy || 'Anonymous' },
+                { new: true }
+            );
+            
+            if (!updatedResource) {
+                return res.status(404).json({ error: 'Resource not found' });
+            }
+            
+            console.log(chalk.green(`✅ Resource ${id} updated`));
+            return res.json({ success: true, resource: updatedResource });
+        }
+        else {
             return res.status(400).json({ error: 'Invalid action' });
         }
-        
-        const resource = await Resource.findById(id);
-        if (!resource) {
-            return res.status(404).json({ error: 'Resource not found' });
-        }
-        
-        resource.approved = action === 'approve';
-        await resource.save();
-        
-        console.log(chalk.green(`✅ Resource ${id} ${action}d`));
-        res.json({ success: true });
     } catch (error) {
         console.error(chalk.red(`❌ Error updating resource: ${error.message}`));
         res.status(500).json({ error: 'Failed to update resource' });

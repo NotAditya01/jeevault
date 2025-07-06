@@ -258,11 +258,13 @@ async function approveResource(id) {
             return;
         }
 
-        const response = await fetch(`/api/admin/resources/${id}/approve`, {
-            method: 'PUT',
+        const response = await fetch(`/api/admin/resources/${id}`, {
+            method: 'PATCH',
             headers: {
-                'Authorization': `Basic ${credentials}`
-            }
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: 'approve' })
         });
 
         if (response.status === 401) {
@@ -278,6 +280,7 @@ async function approveResource(id) {
 
         // Refresh the resources list
         fetchResources();
+        showLoginMessage('Resource approved successfully', 'success');
     } catch (error) {
         console.error('Error approving resource:', error);
         showLoginMessage('Error approving resource: ' + error.message, 'error');
@@ -390,12 +393,12 @@ async function handleEditFormSubmit(e) {
     try {
         console.log('Updating resource:', id, formData);
         const response = await fetch(`/api/admin/resources/${id}`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'Authorization': `Basic ${credentials}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({ ...formData, action: 'update' })
         });
 
         if (response.status === 401) {
@@ -421,10 +424,10 @@ async function handleEditFormSubmit(e) {
 
 // Show login/error message
 function showLoginMessage(text, type) {
-    const messageDiv = document.getElementById('loginMessage');
+    const messageDiv = document.getElementById('statusMessage');
     if (!messageDiv) return;
     
     messageDiv.textContent = text;
     messageDiv.className = `mt-4 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`;
-    messageDiv.style.display = 'block';
+    messageDiv.classList.remove('hidden');
 } 
