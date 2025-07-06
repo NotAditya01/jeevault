@@ -385,7 +385,7 @@ async function handleEditFormSubmit(e) {
         title: form.querySelector('#editTitle').value.trim(),
         description: form.querySelector('#editDescription').value.trim(),
         subject: form.querySelector('#editSubject').value,
-        tag: form.querySelector('#editTag').value,
+        tag: form.querySelector('#editTag').value.toLowerCase(),
         url: form.querySelector('#editUrl').value.trim(),
         uploadedBy: form.querySelector('#editUploadedBy').value.trim() || 'Anonymous'
     };
