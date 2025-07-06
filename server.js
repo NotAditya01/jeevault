@@ -40,6 +40,7 @@ console.log(chalk.blue('\n Connecting to MongoDB...\n'));
 // Add connection parameters directly to the URI if not already present
 let mongoUri = config.mongodbUri;
 if (!mongoUri.includes('?')) {
+    // Add recommended options for Vercel deployment
     mongoUri += '?retryWrites=true&w=majority';
 }
 
@@ -56,6 +57,7 @@ async function connectToDatabase() {
         // Set mongoose options for better serverless performance
         mongoose.set('bufferCommands', false);
         
+        // Connect with updated options
         const connection = await mongoose.connect(mongoUri, getMongoDbOptions());
         console.log(chalk.green('✅ Connected to MongoDB\n'));
         

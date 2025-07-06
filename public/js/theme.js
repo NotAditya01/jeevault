@@ -1,35 +1,29 @@
-// Theme toggle functionality
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+
     const icon = themeToggle.querySelector('i');
-    
-    // Check for saved theme preference or use system preference
-    const savedTheme = localStorage.getItem('theme');
+    if (!icon) return;
+
+    const THEME_KEY = 'theme';
+    const CLASS_DARK = 'dark';
+    const ICON_SUN = 'bi-sun-fill';
+    const ICON_MOON = 'bi-moon-fill';
+
+    const applyTheme = (isDark) => {
+        document.documentElement.classList.toggle(CLASS_DARK, isDark);
+        icon.classList.replace(isDark ? ICON_MOON : ICON_SUN, isDark ? ICON_SUN : ICON_MOON);
+        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+    };
+
+    const savedTheme = localStorage.getItem(THEME_KEY);
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Set initial theme
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-        document.documentElement.classList.add('dark');
-        icon.classList.remove('bi-moon-fill');
-        icon.classList.add('bi-sun-fill');
-    } else {
-        document.documentElement.classList.remove('dark');
-        icon.classList.remove('bi-sun-fill');
-        icon.classList.add('bi-moon-fill');
-    }
-    
-    // Toggle theme on button click
+    const initialIsDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+
+    applyTheme(initialIsDark);
+
     themeToggle.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        
-        if (isDark) {
-            localStorage.setItem('theme', 'dark');
-            icon.classList.remove('bi-moon-fill');
-            icon.classList.add('bi-sun-fill');
-        } else {
-            localStorage.setItem('theme', 'light');
-            icon.classList.remove('bi-sun-fill');
-            icon.classList.add('bi-moon-fill');
-        }
+        const isDark = !document.documentElement.classList.contains(CLASS_DARK);
+        applyTheme(isDark);
     });
-}); 
+});
