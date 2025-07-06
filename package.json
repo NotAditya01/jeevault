@@ -2,6 +2,7 @@
   "name": "jee-vault",
   "version": "1.0.0",
   "description": "JEE educational resource sharing platform",
+  "license": "MIT",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

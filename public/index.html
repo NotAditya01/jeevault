@@ -1,328 +1,660 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JEE Vault - Free Resources for Every Aspirant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            scale: {
+              102: "1.02",
+            },
+          },
+        },
+      };
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
     <!-- Vercel Analytics -->
     <script defer src="/_vercel/insights/script.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+      .card-hover {
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      }
+
+      .hero-fade-in {
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      .card-fade-in {
+        animation: fadeIn 0.5s ease-out;
+        animation-fill-mode: both;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
-        .card-hover {
-            transition: all 0.3s ease;
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        .card-hover:hover {
-            transform: scale(1.03);
+      }
+
+      .stagger-delay-1 {
+        animation-delay: 0.1s;
+      }
+
+      .stagger-delay-2 {
+        animation-delay: 0.2s;
+      }
+
+      .stagger-delay-3 {
+        animation-delay: 0.3s;
+      }
+
+      .stagger-delay-4 {
+        animation-delay: 0.4s;
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        background-color: #4f46e5;
+        color: white;
+        font-weight: 500;
+        transition:
+          transform 0.2s ease,
+          background-color 0.2s ease;
+      }
+
+      .btn-primary:hover {
+        background-color: #4338ca;
+        transform: scale(1.05);
+      }
+
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        background-color: #e5e7eb;
+        color: #111827;
+        font-weight: 500;
+        transition:
+          transform 0.2s ease,
+          background-color 0.2s ease;
+      }
+
+      .btn-secondary:hover {
+        background-color: #d1d5db;
+        transform: scale(1.05);
+      }
+
+      @keyframes pulse-slow {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.1;
         }
-        .hero-fade-in {
-            animation: fadeIn 0.8s ease-out;
+
+        50% {
+          transform: scale(1.05);
+          opacity: 0.2;
         }
-        .card-fade-in {
-            animation: fadeIn 0.5s ease-out;
-            animation-fill-mode: both;
+      }
+
+      .animate-pulse-slow {
+        animation: pulse-slow 10s ease-in-out infinite;
+      }
+
+      .hero-animated-bg {
+        background: linear-gradient(135deg, #1e1e30, #191933, #161626, #1a1945);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+      }
+
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        50% {
+          background-position: 100% 50%;
         }
-        .stagger-delay-1 { animation-delay: 0.1s; }
-        .stagger-delay-2 { animation-delay: 0.2s; }
-        .stagger-delay-3 { animation-delay: 0.3s; }
-        .stagger-delay-4 { animation-delay: 0.4s; }
+
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      @keyframes ping-slow {
+        0% {
+          transform: scale(1);
+          opacity: 0.2;
+        }
+
+        50% {
+          transform: scale(1.5);
+          opacity: 0.1;
+        }
+
+        100% {
+          transform: scale(1);
+          opacity: 0.2;
+        }
+      }
+
+      .animate-ping-slow {
+        animation: ping-slow 6s ease-in-out infinite;
+      }
+
+      .animate-ping-slower {
+        animation: ping-slow 10s ease-in-out infinite;
+      }
+
+      .animate-ping-slowest {
+        animation: ping-slow 14s ease-in-out infinite;
+      }
+
+      .fade-in-section.appear {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
     </style>
-</head>
-<body class="h-full bg-gray-50 dark:bg-gray-900">
+  </head>
+
+  <body class="h-full bg-gray-50 dark:bg-gray-900">
     <!-- Navigation -->
-    <nav class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="/" class="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-                        <i class="bi bi-book text-2xl"></i>
-                        <span class="font-bold text-xl">JEE Vault</span>
-                    </a>
-                    <div class="hidden md:flex md:space-x-8 md:ml-10">
-                        <a href="/" class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 px-3 py-2 text-sm font-medium">Home</a>
-                        <a href="/upload" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Upload</a>
-                        <a href="/admin" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Admin</a>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                        <i class="bi bi-moon-fill text-gray-600 dark:text-gray-400"></i>
-                    </button>
-                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <i class="bi bi-list text-2xl"></i>
-                    </button>
-                </div>
+    <nav
+      class="bg-white/10 dark:bg-white/5 backdrop-blur-md shadow-md ring-1 ring-white/10 sticky top-0 z-50 transition duration-300"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a
+              href="/"
+              class="flex items-center space-x-2 text-blue-600 dark:text-blue-400"
+            >
+              <i class="bi bi-book text-2xl"></i>
+              <span class="font-bold text-xl">JEE Vault</span>
+            </a>
+            <div class="hidden md:flex md:space-x-8 md:ml-10">
+              <a
+                href="/"
+                class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 px-3 py-2 text-sm font-medium"
+                >Home</a
+              >
+              <a
+                href="/upload"
+                class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium"
+                >Upload</a
+              >
+              <a
+                href="/admin"
+                class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium"
+                >Admin</a
+              >
             </div>
-            <!-- Mobile menu -->
-            <div id="mobileMenu" class="hidden md:hidden">
-                <div class="px-2 pt-2 pb-3 space-y-1">
-                    <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700">Home</a>
-                    <a href="/upload" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Upload</a>
-                    <a href="/admin" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Admin</a>
-                </div>
-            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button
+              id="themeToggle"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+            >
+              <i class="bi bi-moon-fill text-gray-600 dark:text-gray-400"></i>
+            </button>
+            <button
+              id="mobileMenuBtn"
+              class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <i class="bi bi-list text-2xl"></i>
+            </button>
+          </div>
         </div>
+        <!-- Mobile menu -->
+        <div id="mobileMenu" class="hidden md:hidden">
+          <div class="px-2 pt-2 pb-3 space-y-1">
+            <a
+              href="/"
+              class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700"
+              >Home</a
+            >
+            <a
+              href="/upload"
+              class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              >Upload</a
+            >
+            <a
+              href="/admin"
+              class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              >Admin</a
+            >
+          </div>
+        </div>
+      </div>
     </nav>
 
     <!-- Hero Section -->
-    <div class="relative bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="py-12 md:py-20 text-center hero-fade-in">
-                <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white tracking-tight">
-                    JEE Vault — Free Resources for Every Aspirant
-                </h1>
-                <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300">
-                    Access high-quality study materials, notes, and resources for JEE preparation — shared by students, for students.
-                </p>
-                <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="#resources" class="px-8 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center">
-                        <i class="bi bi-folder mr-2"></i>
-                        Browse Resources
-                    </a>
-                    <a href="/upload" class="px-8 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 flex items-center justify-center">
-                        <i class="bi bi-upload mr-2"></i>
-                        Upload Material
-                    </a>
-                </div>
+    <div class="relative overflow-hidden hero-animated-bg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="py-12 md:py-20 text-center hero-fade-in">
+          <h1
+            class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white tracking-tight"
+          >
+            JEE Vault — Free Resources for Every Aspirant
+          </h1>
+          <p
+            class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300"
+          >
+            Access high-quality study materials, notes, and resources for JEE
+            preparation — shared by students, for students.
+          </p>
+          <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+            <a href="#resources" class="btn-primary">
+              <i class="bi bi-folder mr-2"></i> Browse Resources
+            </a>
+
+            <a href="/upload" class="btn-secondary">
+              <i class="bi bi-upload mr-2"></i> Upload Material
+            </a>
+            <div
+              class="absolute inset-0 overflow-hidden pointer-events-none z-0"
+            >
+              <div
+                class="absolute w-2 h-2 bg-indigo-400 rounded-full top-1/4 left-1/3 animate-ping-slow opacity-10"
+              ></div>
+              <div
+                class="absolute w-3 h-3 bg-purple-400 rounded-full top-3/4 left-2/3 animate-ping-slower opacity-10"
+              ></div>
+              <div
+                class="absolute w-1.5 h-1.5 bg-blue-300 rounded-full top-1/2 left-1/5 animate-ping-slowest opacity-10"
+              ></div>
             </div>
+          </div>
         </div>
-        <!-- Abstract shapes -->
-        <div class="hidden lg:block absolute top-0 right-0 -mt-20 opacity-10 dark:opacity-5">
-            <svg width="400" height="400" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#4F46E5" d="M47.1,-57.5C59.9,-47.3,68.7,-32,72.1,-15.2C75.6,1.6,73.8,19.9,65.2,33.5C56.7,47.1,41.5,56,25.5,61.8C9.6,67.7,-7.1,70.4,-22.8,66.7C-38.5,62.9,-53.2,52.7,-62.1,38.6C-70.9,24.4,-73.9,6.4,-70.1,-9.8C-66.3,-26,-55.6,-40.4,-42.3,-50.5C-29,-60.7,-13.2,-66.6,2.1,-69C17.4,-71.4,34.3,-67.7,47.1,-57.5Z" transform="translate(100 100)" />
-            </svg>
-        </div>
-        <div class="hidden lg:block absolute bottom-0 left-0 opacity-10 dark:opacity-5">
-            <svg width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#4F46E5" d="M41.3,-51.2C52.9,-43.2,61.2,-29.7,64.9,-15C68.5,-0.3,67.4,15.5,60.7,28.3C54.1,41.1,41.9,50.8,28.4,56.6C14.9,62.4,0.2,64.2,-15.3,62C-30.8,59.8,-47.1,53.5,-57.3,41.7C-67.5,29.9,-71.5,12.6,-70.3,-4.1C-69,-20.8,-62.5,-36.9,-51.1,-45.1C-39.7,-53.4,-23.3,-53.8,-8.1,-44.9C7.1,-36,29.7,-59.2,41.3,-51.2Z" transform="translate(100 100)" />
-            </svg>
-        </div>
+      </div>
+      <div
+        class="mt-10 text-center fade-in-section opacity-0 translate-y-5 transition-all duration-700 delay-100"
+      >
+        <h2 class="text-lg text-gray-400 dark:text-gray-500 mb-2"></h2>
+        <a href="/upload" class="btn-outline text-sm">
+          <i class="bi bi-info-circle mr-1"></i>
+        </a>
+      </div>
+
+      <!-- Abstract shapes -->
+      <div
+        class="hidden lg:block absolute top-0 right-0 -mt-20 animate-pulse-slow opacity-10 dark:opacity-5"
+      >
+        <svg
+          width="400"
+          height="400"
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill="#4F46E5"
+            d="M47.1,-57.5C59.9,-47.3,68.7,-32,72.1,-15.2C75.6,1.6,73.8,19.9,65.2,33.5C56.7,47.1,41.5,56,25.5,61.8C9.6,67.7,-7.1,70.4,-22.8,66.7C-38.5,62.9,-53.2,52.7,-62.1,38.6C-70.9,24.4,-73.9,6.4,-70.1,-9.8C-66.3,-26,-55.6,-40.4,-42.3,-50.5C-29,-60.7,-13.2,-66.6,2.1,-69C17.4,-71.4,34.3,-67.7,47.1,-57.5Z"
+            transform="translate(100 100)"
+          />
+        </svg>
+      </div>
+      <div
+        class="hidden lg:block absolute top-0 right-0 -mt-20 animate-pulse-slow opacity-10 dark:opacity-5"
+      >
+        <svg
+          width="300"
+          height="300"
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill="#4F46E5"
+            d="M41.3,-51.2C52.9,-43.2,61.2,-29.7,64.9,-15C68.5,-0.3,67.4,15.5,60.7,28.3C54.1,41.1,41.9,50.8,28.4,56.6C14.9,62.4,0.2,64.2,-15.3,62C-30.8,59.8,-47.1,53.5,-57.3,41.7C-67.5,29.9,-71.5,12.6,-70.3,-4.1C-69,-20.8,-62.5,-36.9,-51.1,-45.1C-39.7,-53.4,-23.3,-53.8,-8.1,-44.9C7.1,-36,29.7,-59.2,41.3,-51.2Z"
+            transform="translate(100 100)"
+          />
+        </svg>
+      </div>
     </div>
 
     <!-- Search and Filter Section -->
-    <div class="bg-white dark:bg-gray-800 shadow-sm py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <!-- Search Bar -->
-                <div class="relative flex-grow max-w-2xl">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="bi bi-search text-gray-400"></i>
-                    </div>
-                    <input 
-                        id="searchInput" 
-                        type="text" 
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
-                        placeholder="Search resources by title or description..."
-                    >
-                </div>
-                
-                <!-- Subject Filter -->
-                <div class="flex-shrink-0">
-                    <label for="subjectFilter" class="sr-only">Filter by subject</label>
-                    <select 
-                        id="subjectFilter" 
-                        class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                        <option value="">All Subjects</option>
-                        <option value="Physics">Physics</option>
-                        <option value="Chemistry">Chemistry</option>
-                        <option value="Mathematics">Mathematics</option>
-                    </select>
-                </div>
-            
-                <div class="flex-shrink-0">
-                    <label for="tagFilter" class="sr-only">Filter by type</label>
-                    <select 
-                        id="tagFilter" 
-                        class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                        <option value="">All Types</option>
-                        <option value="notes">Notes</option>
-                        <option value="books">Books</option>
-                    </select>
-                </div>
+    <div
+      class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-xl mx-4 mt-[-40px] shadow-xl ring-1 ring-white/10 transition-all duration-500 fade-in-section opacity-0 translate-y-5"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        >
+          <!-- Search Bar -->
+          <div class="relative flex-grow max-w-2xl">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="bi bi-search text-gray-400"></i>
             </div>
+            <input
+              id="searchInput"
+              type="text"
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+              placeholder="Search resources by title or description..."
+            />
+          </div>
+
+          <!-- Subject Filter -->
+          <div class="flex-shrink-0">
+            <label for="subjectFilter" class="sr-only">Filter by subject</label>
+            <select
+              id="subjectFilter"
+              class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">All Subjects</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Mathematics">Mathematics</option>
+            </select>
+          </div>
+
+          <div class="flex-shrink-0">
+            <label for="tagFilter" class="sr-only">Filter by type</label>
+            <select
+              id="tagFilter"
+              class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">All Types</option>
+              <option value="notes">Notes</option>
+              <option value="books">Books</option>
+            </select>
+          </div>
         </div>
+      </div>
     </div>
 
-   
     <section id="resources" class="py-12 md:py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Latest Resources</h2>
-                <p class="mt-4 text-gray-600 dark:text-gray-400">Browse through our collection of high-quality JEE preparation materials</p>
-            </div>
-
-            <div id="resourcesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Resources will be loaded here -->
-                <div class="loading-placeholder flex items-center justify-center p-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-            </div>
-
-            <div id="noResources" class="hidden text-center py-16">
-                <div class="flex flex-col items-center justify-center">
-                    <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                    <p class="text-lg text-gray-600 dark:text-gray-400 mb-4">Failed to load resources. Please try again later.</p>
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        <i class="bi bi-arrow-clockwise mr-2"></i>Try Again
-                    </button>
-                </div>
-            </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
+            Latest Resources
+          </h2>
+          <p class="mt-4 text-gray-600 dark:text-gray-400">
+            Browse through our collection of high-quality JEE preparation
+            materials
+          </p>
         </div>
+
+        <div
+          id="resourcesContainer"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <!-- Resources will be loaded here -->
+          <div
+            class="loading-placeholder flex items-center justify-center p-12"
+          >
+            <div
+              class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
+            ></div>
+          </div>
+        </div>
+
+        <div id="noResources" class="hidden text-center py-16">
+          <div class="flex flex-col items-center justify-center">
+            <svg
+              class="w-16 h-16 text-red-500 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              ></path>
+            </svg>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-4">
+              Failed to load resources. Please try again later.
+            </p>
+            <button
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <i class="bi bi-arrow-clockwise mr-2"></i>Try Again
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center mb-4 md:mb-0">
-                    <a href="/" class="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-                        <i class="bi bi-book text-xl"></i>
-                        <span class="font-bold text-lg">JEE Vault</span>
-                    </a>
-                </div>
-                <div class="text-gray-600 dark:text-gray-400 text-sm">
-                    Made by <a href="https://github.com/" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">Adii</a> — <a href="https://github.com/adii-the-billionaire/JEE-Vault" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">View source</a>
-                </div>
+    <footer
+      class="bg-white/10 dark:bg-white/5 backdrop-blur-md border-t border-white/10 py-8 px-4"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="flex items-center mb-4 md:mb-0">
+            <a
+              href="/"
+              class="flex items-center space-x-2 text-blue-600 dark:text-blue-400"
+            >
+              <i class="bi bi-book text-xl"></i>
+              <span class="font-bold text-lg">JEE Vault</span>
+            </a>
+          </div>
+          <div
+            class="text-gray-600 dark:text-gray-400 text-sm flex flex-col items-center md:items-start space-y-2 md:flex-row md:justify-between md:space-y-0 md:space-x-6"
+          >
+            <div></div>
+            <div>
+              If you’re the rightful owner and wish to remove any content,<br
+                class="md:hidden"
+              />
+              please email us at
+              <a
+                href="mailto:xyz@example.com"
+                class="text-blue-500 hover:underline"
+                >xyz@example.com</a
+              >
             </div>
+            <div>
+              Made by Adii —
+              <a
+                href="https://github.com/adii-the-billionaire/JEE-Vault"
+                target="_blank"
+                class="text-blue-500 hover:underline"
+                >View source</a
+              >
+            </div>
+          </div>
         </div>
+      </div>
     </footer>
 
     <script src="/js/theme.js"></script>
     <script>
-       
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
 
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
+      if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+      }
 
-        // Format date
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
-        }
+      // Format date
+      function formatDate(dateString) {
+        const options = { year: "numeric", month: "long", day: "numeric" };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+      }
 
-     
-        async function loadResources() {
-            try {
-                const response = await fetch('/api/resources');
-                const resources = await response.json();
-                const resourcesContainer = document.getElementById('resourcesContainer');
-                
-                // Clear loading placeholder
-                resourcesContainer.innerHTML = '';
-                
-                if (resources.length === 0) {
-                    document.getElementById('noResources').classList.remove('hidden');
-                    return;
-                }
-                
-                // Create resource cards
-                resources.forEach((resource, index) => {
-                    const card = document.createElement('div');
-                    card.className = `bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg card-hover p-6 flex flex-col card-fade-in stagger-delay-${(index % 4) + 1}`;
-                    
-                    const tagClass = resource.tag === 'notes' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                        : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-                    
-                    card.innerHTML = `
+      async function loadResources() {
+        try {
+          const response = await fetch("/api/resources");
+          const resources = await response.json();
+          const resourcesContainer =
+            document.getElementById("resourcesContainer");
+
+          // Clear loading placeholder
+          resourcesContainer.innerHTML = "";
+
+          if (resources.length === 0) {
+            document.getElementById("noResources").classList.remove("hidden");
+            return;
+          }
+
+          // Create resource cards
+          resources.forEach((resource, index) => {
+            const card = document.createElement("div");
+            card.className = `bg-white/5 dark:bg-white/10 backdrop-blur-lg border border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 p-6 flex flex-col card-fade-in stagger-delay-${
+              (index % 4) + 1
+            }`;
+
+            const tagClass =
+              resource.tag === "notes"
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+
+            card.innerHTML = `
                         <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${resource.title}</h3>
-                            <span class="px-2 py-1 text-xs rounded-full ${tagClass} uppercase font-medium">${resource.tag}</span>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${
+                              resource.title
+                            }</h3>
+                            <span class="px-2 py-1 text-xs rounded-full ${tagClass} uppercase font-medium">${
+                              resource.tag
+                            }</span>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-grow">${resource.description}</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-grow">${
+                          resource.description
+                        }</p>
                         <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
                             <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-700 dark:text-gray-300">${resource.subject}</span>
-                                <span class="text-gray-500 dark:text-gray-400">${formatDate(resource.createdAt)}</span>
+                                <span class="text-gray-700 dark:text-gray-300">${
+                                  resource.subject
+                                }</span>
+                                <span class="text-gray-500 dark:text-gray-400">${formatDate(
+                                  resource.createdAt,
+                                )}</span>
                             </div>
                             <div class="flex justify-between items-center mt-3">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">By ${resource.uploadedBy}</span>
-                                <a href="${resource.type === 'file' ? resource.fileUrl : resource.url}" target="_blank" 
+                                <span class="text-xs text-gray-500 dark:text-gray-400">By ${
+                                  resource.uploadedBy
+                                }</span>
+                                <a href="${
+                                  resource.type === "file"
+                                    ? resource.fileUrl
+                                    : resource.url
+                                }" target="_blank" 
                                    class="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
                                     <i class="bi bi-download mr-1"></i> Download
                                 </a>
                             </div>
                         </div>
                     `;
-                    
-                    resourcesContainer.appendChild(card);
-                });
-                
-            } catch (error) {
-                console.error('Error loading resources:', error);
-                const resourcesContainer = document.getElementById('resourcesContainer');
-                resourcesContainer.innerHTML = `
+
+            resourcesContainer.appendChild(card);
+          });
+        } catch (error) {
+          console.error("Error loading resources:", error);
+          const resourcesContainer =
+            document.getElementById("resourcesContainer");
+          resourcesContainer.innerHTML = `
                     <div class="col-span-full text-center py-8">
                         <i class="bi bi-exclamation-triangle text-3xl text-red-500 mb-2"></i>
                         <p class="text-gray-600 dark:text-gray-400">Failed to load resources. Please try again later.</p>
                     </div>
                 `;
-            }
         }
+      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("appear");
+          }
+        });
+      });
+      document
+        .querySelectorAll(".fade-in-section")
+        .forEach((el) => observer.observe(el));
+      // Filter resources based on search and filters
+      function filterResources() {
+        const searchInput = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const subjectFilter = document.getElementById("subjectFilter").value;
+        const tagFilter = document.getElementById("tagFilter").value;
+        const cards = document.querySelectorAll("#resourcesContainer > div");
+        let visibleCount = 0;
 
-        // Filter resources based on search and filters
-        function filterResources() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const subjectFilter = document.getElementById('subjectFilter').value;
-            const tagFilter = document.getElementById('tagFilter').value;
-            const cards = document.querySelectorAll('#resourcesContainer > div');
-            let visibleCount = 0;
-            
-            cards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const description = card.querySelector('p').textContent.toLowerCase();
-                const subject = card.querySelector('.flex.justify-between.items-center.text-sm span').textContent;
-                const tag = card.querySelector('.px-2.py-1.text-xs.rounded-full').textContent.toLowerCase();
-                
-                const matchesSearch = title.includes(searchInput) || description.includes(searchInput);
-                const matchesSubject = subjectFilter === '' || subject === subjectFilter;
-                const matchesTag = tagFilter === '' || tag.toLowerCase() === tagFilter.toLowerCase();
-                
-                if (matchesSearch && matchesSubject && matchesTag) {
-                    card.classList.remove('hidden');
-                    visibleCount++;
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-            
-            // Show/hide no results message
-            if (visibleCount === 0 && cards.length > 0) {
-                document.getElementById('noResources').classList.remove('hidden');
-                document.getElementById('noResources').querySelector('p').textContent = 'No resources match your search criteria.';
-            } else {
-                document.getElementById('noResources').classList.add('hidden');
-            }
+        cards.forEach((card) => {
+          const title = card.querySelector("h3").textContent.toLowerCase();
+          const description = card.querySelector("p").textContent.toLowerCase();
+          const subject = card.querySelector(
+            ".flex.justify-between.items-center.text-sm span",
+          ).textContent;
+          const tag = card
+            .querySelector(".px-2.py-1.text-xs.rounded-full")
+            .textContent.toLowerCase();
+
+          const matchesSearch =
+            title.includes(searchInput) || description.includes(searchInput);
+          const matchesSubject =
+            subjectFilter === "" || subject === subjectFilter;
+          const matchesTag =
+            tagFilter === "" || tag.toLowerCase() === tagFilter.toLowerCase();
+
+          if (matchesSearch && matchesSubject && matchesTag) {
+            card.classList.remove("hidden");
+            visibleCount++;
+          } else {
+            card.classList.add("hidden");
+          }
+        });
+
+        // Show/hide no results message
+        if (visibleCount === 0 && cards.length > 0) {
+          document.getElementById("noResources").classList.remove("hidden");
+          document
+            .getElementById("noResources")
+            .querySelector("p").textContent =
+            "No resources match your search criteria.";
+        } else {
+          document.getElementById("noResources").classList.add("hidden");
         }
+      }
 
-        // Add event listeners for search and filters
-        document.getElementById('searchInput').addEventListener('input', filterResources);
-        document.getElementById('subjectFilter').addEventListener('change', filterResources);
-        document.getElementById('tagFilter').addEventListener('change', filterResources);
+      // Add event listeners for search and filters
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", filterResources);
+      document
+        .getElementById("subjectFilter")
+        .addEventListener("change", filterResources);
+      document
+        .getElementById("tagFilter")
+        .addEventListener("change", filterResources);
 
-        // Load resources when page loads
-        document.addEventListener('DOMContentLoaded', loadResources);
+      // Load resources when page loads
+      document.addEventListener("DOMContentLoaded", loadResources);
     </script>
-</body>
-</html> 
+  </body>
+</html>

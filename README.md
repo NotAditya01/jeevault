@@ -1,58 +1,145 @@
-# JEE Vault
+# JEE Vault 🚀
 
-A platform for sharing and accessing JEE preparation resources.
+A minimal, open-source platform for discovering and sharing high-quality **JEE (Joint Entrance Examination) preparation resources** – from coaching modules to foreign–author books and concise revision notes.
 
-## Features
+---
 
-- Browse and search for JEE preparation materials
-- Upload PDF resources or share external links
-- Admin approval system for quality control
-- Filter resources by subject and tags
-- Dark mode support
-- Mobile responsive design
+## ✨ Features
 
-## Setup
+- 🔍 **Search &amp; Browse** resources by subject, tag &amp; keyword
+- 📚 **Tags** for quick filtering (Books, Notes, Question Banks…)
+- 🌐 **External Link Support** (Google Drive, Telegram, Direct PDF, etc.)
+- 📝 **Contributor Form** – anyone can submit a resource for review
+- 🧑‍💼 **Admin Panel** for reviewing / approving uploads
+- 🌓 **Dark Mode** &amp; responsive mobile-first UI
 
-1. Clone the repository
-2. Install dependencies:
-   ```
+---
+
+## 🖥️ Tech Stack
+
+| Layer       | Technology |
+|-------------|------------|
+| Backend     | Node.js, Express 4, Mongoose 8 |
+| Database    | MongoDB / MongoDB Atlas |
+| Front-end   | Tailwind CSS, Vanilla JS, HTML 5 |
+| Deployment  | Vercel (serverless) |
+| Tooling     | dotenv, nodemon, chalk |
+
+---
+
+## 🚀 Quick Start
+
+1. **Clone &amp; Install**
+
+   ```bash
+   git clone https://github.com/yourusername/jee-vault.git
+   cd jee-vault
    npm install
    ```
-3. Create a `.env` file in the root directory with the following variables:
-   ```
-   # MongoDB Connection
-   MONGODB_URI=mongodb+srv://your-username:your-password@your-cluster.mongodb.net/jeevault
 
-   # Admin Credentials
+2. **Configure Environment** – copy `.env.example` (below) to `.env` and fill in the values:
+
+   ```bash
+   cp .env.example .env
+   # then edit .env
+   ```
+
+   ```dotenv
+   # .env.example
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/jee-vault?retryWrites=true&amp;w=majority
    ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=securepassword
+   ADMIN_PASSWORD=supersecret
+   PORT=3000 # optional – default 3000
+   ```
 
-   # Cloudinary Configuration (Required for production file uploads)
-   CLOUDINARY_CLOUD_NAME=your-cloud-name
-   CLOUDINARY_API_KEY=your-api-key
-   CLOUDINARY_API_SECRET=your-api-secret
-   ```
-4. Start the development server:
-   ```
+3. **Run Locally**
+
+   ```bash
+   # development (auto-restart)
    npm run dev
+
+   # production
+   npm start
    ```
 
-## Cloudinary Setup (Required for Production)
+4. Visit **http://localhost:3000** in your browser.
 
-To enable file uploads in production:
+---
 
-1. Create a free Cloudinary account at https://cloudinary.com/
-2. Get your cloud name, API key, and API secret from your dashboard
-3. Add these values to your environment variables:
-   - `CLOUDINARY_CLOUD_NAME`
-   - `CLOUDINARY_API_KEY`
-   - `CLOUDINARY_API_SECRET`
-4. For Vercel deployment, add these as environment variables in your Vercel project settings
+## 📡 API Reference
 
-## Deployment
+### Public Endpoints
 
-This project is configured for deployment on Vercel. Simply connect your GitHub repository to Vercel and deploy.
+| Method | Endpoint           | Description                          |
+|--------|--------------------|--------------------------------------|
+| GET    | `/api/resources`   | List **approved** resources          |
+| POST   | `/api/resources`   | Submit a new resource (awaits review) |
 
-## License
+<details>
+<summary>POST Body Schema</summary>
 
-MIT 
+```json5
+{
+  "title": "Physics Galaxy Mechanics",
+  "description": "Comprehensive notes on rotational motion",
+  "subject": "Physics",
+  "tag": "notes",           // one of [ "notes", "books" ]
+  "url": "https://drive.google.com/file/d/...",
+  "uploadedBy": "John Doe"  // optional
+}
+```
+</details>
+
+### Admin Endpoints (Basic Auth)
+
+> Supply `Authorization: Basic base64(username:password)` header using the credentials from `.env`.
+
+| Method | Endpoint                               | Purpose                     |
+|--------|----------------------------------------|-----------------------------|
+| GET    | `/api/admin/resources?status=pending`  | List pending uploads        |
+| GET    | `/api/admin/resources?status=approved` | List approved uploads       |
+| PATCH  | `/api/admin/resources/:id`             | `action=approve|reject|update` |
+| DELETE | `/api/admin/resources/:id`             | Delete a resource           |
+
+---
+
+## 🗂️ Project Structure
+
+```
+jee-vault/
+├─ models/           ← Mongoose models
+│  └─ Resource.js
+├─ public/           ← Static front-end (HTML/JS/CSS)
+├─ utils/            ← Helper utilities &amp; config validation
+├─ server.js         ← Express entry-point
+└─ README.md
+```
+
+---
+
+## 🤝 Contributing
+
+1. **Fork** the repo &amp; create your branch: `git checkout -b feature/my-feature`  
+2. **Commit** your changes: `git commit -m "feat: add amazing feature"`  
+3. **Push** to the branch: `git push origin feature/my-feature`  
+4. **Open a Pull Request** 🚀
+
+Please follow the existing code-style (prettier / eslint coming soon) and write clear commit messages. All contributions – bug-fixes, docs &amp; features – are welcome!
+
+---
+
+## 🛡️ License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+---
+
+## 🙏 Acknowledgements
+
+- [Node.js](https://nodejs.org) – server runtime  
+- [Express](https://expressjs.com) – fast, unopinionated web framework  
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) – hosted database  
+- [Tailwind CSS](https://tailwindcss.com) – utility-first CSS framework  
+- [Vercel](https://vercel.com) – seamless cloud deployment  
+
+> Made with ❤️ for the JEE community

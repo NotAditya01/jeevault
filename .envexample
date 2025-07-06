@@ -1,9 +1,0 @@
-# MongoDB connection string (replace with your actual URI)
-MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority&appName=<appName>
-
-# Server Port
-PORT=3000
-
-# Admin Credentials (change before deploying)
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=secure123

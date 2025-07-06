@@ -1,148 +1,259 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Upload Resource - JEE Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
+      tailwind.config = {
+        darkMode: "class",
+      };
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
     <!-- Vercel Analytics -->
     <script defer src="/_vercel/insights/script.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .form-fade-in {
+        animation: fadeIn 0.5s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
-        .form-fade-in {
-            animation: fadeIn 0.5s ease-out;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+      }
     </style>
-</head>
-<body class="h-full bg-gray-50 dark:bg-gray-900">
+  </head>
+  <body class="h-full bg-gray-50 dark:bg-gray-900">
     <!-- Navigation -->
-    <nav class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="/" class="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-                        <i class="bi bi-book text-2xl"></i>
-                        <span class="font-bold text-xl">JEE Vault</span>
-                    </a>
-                    <div class="hidden md:flex md:space-x-8 md:ml-10">
-                        <a href="/" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Home</a>
-                        <a href="/upload" class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 px-3 py-2 text-sm font-medium">Upload</a>
-                        <a href="/admin" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium">Admin</a>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                        <i class="bi bi-moon-fill text-gray-600 dark:text-gray-400"></i>
-                    </button>
-                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <i class="bi bi-list text-2xl"></i>
-                    </button>
-                </div>
+    <nav
+      class="bg-white/10 dark:bg-white/5 backdrop-blur-lg shadow-md ring-1 ring-white/10 border-b border-white/10 sticky top-0 z-50 transition duration-300"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a
+              href="/"
+              class="flex items-center space-x-2 text-blue-600 dark:text-blue-400"
+            >
+              <i class="bi bi-book text-2xl"></i>
+              <span class="font-bold text-xl">JEE Vault</span>
+            </a>
+            <div class="hidden md:flex md:space-x-8 md:ml-10">
+              <a
+                href="/"
+                class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium"
+                >Home</a
+              >
+              <a
+                href="/upload"
+                class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 px-3 py-2 text-sm font-medium"
+                >Upload</a
+              >
+              <a
+                href="/admin"
+                class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium"
+                >Admin</a
+              >
             </div>
-            <!-- Mobile menu -->
-            <div id="mobileMenu" class="hidden md:hidden">
-                <div class="px-2 pt-2 pb-3 space-y-1">
-                    <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
-                    <a href="/upload" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700">Upload</a>
-                    <a href="/admin" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Admin</a>
-                </div>
-            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button
+              id="themeToggle"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+            >
+              <i class="bi bi-moon-fill text-gray-600 dark:text-gray-400"></i>
+            </button>
+            <button
+              id="mobileMenuBtn"
+              class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <i class="bi bi-list text-2xl"></i>
+            </button>
+          </div>
         </div>
+        <!-- Mobile menu -->
+        <div id="mobileMenu" class="hidden md:hidden">
+          <div class="px-2 pt-2 pb-3 space-y-1">
+            <a
+              href="/"
+              class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              >Home</a
+            >
+            <a
+              href="/upload"
+              class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700"
+              >Upload</a
+            >
+            <a
+              href="/admin"
+              class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              >Admin</a
+            >
+          </div>
+        </div>
+      </div>
     </nav>
 
     <!-- Upload Form Container -->
-    <div class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div class="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 form-fade-in">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Upload Educational Resource</h2>
-                <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">Share your JEE study materials with the community</p>
-            </div>
-
-            <form id="uploadForm" class="space-y-6">
-                <!-- Title Input -->
-                <div class="form-group">
-                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
-                    <input type="text" id="title" name="title" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300">
-                </div>
-
-                <!-- Description Input -->
-                <div class="form-group">
-                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                    <textarea id="description" name="description" rows="3" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"></textarea>
-                </div>
-
-                <!-- Subject Select -->
-                <div class="form-group">
-                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
-                    <select id="subject" name="subject" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300">
-                        <option value="">Select a subject</option>
-                        <option value="Physics">Physics</option>
-                        <option value="Chemistry">Chemistry</option>
-                        <option value="Math">Math</option>
-                    </select>
-                </div>
-
-                <!-- Resource Type Select -->
-                <div class="form-group">
-                    <label for="tag" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resource Type</label>
-                    <select id="tag" name="tag" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300">
-                        <option value="">Select type</option>
-                        <option value="notes">Notes</option>
-                        <option value="books">Books</option>
-                    </select>
-                </div>
-
-                <!-- Uploaded By Input -->
-                <div class="form-group">
-                    <label for="uploadedBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Uploaded By (Your Name) <span class="text-gray-500 dark:text-gray-400">(optional)</span></label>
-                    <input type="text" id="uploadedBy" name="uploadedBy"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
-                        placeholder="Enter your name or leave blank for 'Anonymous'">
-                </div>
-
-                <!-- URL Input -->
-                <div class="form-group">
-                    <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resource URL</label>
-                    <input type="url" id="url" name="url" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
-                        placeholder="https://drive.google.com/... or https://t.me/...">
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        <i class="bi bi-info-circle mr-1"></i>
-                        Please provide a direct link to your resource from Google Drive, Telegram, or other hosting platforms.
-                    </p>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit"
-                    class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300">
-                    <i class="bi bi-cloud-upload mr-2"></i>
-                    Submit Resource
-                </button>
-
-                <!-- Status Message -->
-                <div id="statusMessage" class="hidden mt-4 p-4 rounded-lg"></div>
-            </form>
+    <div
+      class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8"
+    >
+      <div
+        class="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 form-fade-in"
+      >
+        <div class="text-center mb-8">
+          <h2
+            class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl"
+          >
+            Upload  Resource
+          </h2>
+          <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            Share your JEE study materials with the community
+          </p>
         </div>
+
+        <form id="uploadForm" class="space-y-6">
+          <!-- Title Input -->
+          <div class="form-group">
+            <label
+              for="title"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Title</label
+            >
+            <input
+              type="text"
+              id="title"
+              name="title"
+              required
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
+            />
+          </div>
+
+          <!-- Description Input -->
+          <div class="form-group">
+            <label
+              for="description"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Description</label
+            >
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              required
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
+            ></textarea>
+          </div>
+
+          <!-- Subject Select -->
+          <div class="form-group">
+            <label
+              for="subject"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Subject</label
+            >
+            <select
+              id="subject"
+              name="subject"
+              required
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
+            >
+              <option value="">Select a subject</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Math">Math</option>
+            </select>
+          </div>
+
+          <!-- Resource Type Select -->
+          <div class="form-group">
+            <label
+              for="tag"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Resource Type</label
+            >
+            <select
+              id="tag"
+              name="tag"
+              required
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
+            >
+              <option value="">Select type</option>
+              <option value="notes">Notes</option>
+              <option value="books">Books</option>
+            </select>
+          </div>
+
+          <!-- Uploaded By Input -->
+          <div class="form-group">
+            <label
+              for="uploadedBy"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Uploaded By (Your Name)
+              <span class="text-gray-500 dark:text-gray-400"
+                >(optional)</span
+              ></label
+            >
+            <input
+              type="text"
+              id="uploadedBy"
+              name="uploadedBy"
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
+              placeholder="Enter your name or leave blank for 'Anonymous'"
+            />
+          </div>
+
+          <!-- URL Input -->
+          <div class="form-group">
+            <label
+              for="url"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Resource URL</label
+            >
+            <input
+              type="url"
+              id="url"
+              name="url"
+              required
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-300"
+              placeholder="https://drive.google.com/... or https://t.me/..."
+            />
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <i class="bi bi-info-circle mr-1"></i>
+              Please provide a direct link to your resource from Google Drive,
+              Telegram, or other hosting platforms.
+            </p>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300"
+          >
+            <i class="bi bi-cloud-upload mr-2"></i>
+            Submit Resource
+          </button>
+
+          <!-- Status Message -->
+          <div id="statusMessage" class="hidden mt-4 p-4 rounded-lg"></div>
+        </form>
+      </div>
     </div>
 
     <script src="/js/theme.js"></script>
     <script src="/js/upload.js"></script>
-</body>
-</html> 
+  </body>
+</html>
