@@ -1,3 +1,5 @@
+⚠️ Note: This project is paused. May revisit this later.
+
 # JEE Vault 🚀
 
 A minimal, open-source platform for discovering and sharing high-quality **JEE (Joint Entrance Examination) preparation resources** – from coaching modules to foreign–author books and concise revision notes.
